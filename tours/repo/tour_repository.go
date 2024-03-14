@@ -51,3 +51,12 @@ func (repo *TourRepository) Delete(id int64) error {
 	}
 	return nil
 }
+
+func (repo *TourRepository) FindByAuthor(id int64) ([]model.Tour, error) {
+	var tours []model.Tour
+	dbResult := repo.DB.Where("author_id = ?", id).Find(&tours)
+	if dbResult.Error != nil {
+		return nil, dbResult.Error
+	}
+	return tours, nil
+}

@@ -5,7 +5,7 @@ import (
 	"github.com/gorilla/mux"
 	"net/http"
 	"strconv"
-	"tours/model"
+	"tours/dto"
 	"tours/service"
 )
 
@@ -14,14 +14,19 @@ type TourHandler struct {
 }
 
 func (handler *TourHandler) GetAll(writer http.ResponseWriter, req *http.Request) {
-	tour, err := handler.TourService.FindAllTour()
+	tours, err := handler.TourService.FindAllTours()
 	writer.Header().Set("Content-Type", "application/json")
 	if err != nil {
 		writer.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
-	err = json.NewEncoder(writer).Encode(tour)
+	tourDtos := make([]dto.TourDto, len(tours))
+	for i, tour := range tours {
+		tourDtos[i] = dto.MapFromModel(tour)
+	}
+
+	err = json.NewEncoder(writer).Encode(tourDtos)
 	if err != nil {
 		writer.WriteHeader(http.StatusInternalServerError)
 		return
@@ -39,7 +44,7 @@ func (handler *TourHandler) Get(writer http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	err = json.NewEncoder(writer).Encode(tour)
+	err = json.NewEncoder(writer).Encode(dto.MapFromModel(*tour))
 	if err != nil {
 		writer.WriteHeader(http.StatusInternalServerError)
 		return
@@ -47,15 +52,21 @@ func (handler *TourHandler) Get(writer http.ResponseWriter, req *http.Request) {
 }
 
 func (handler *TourHandler) Create(writer http.ResponseWriter, req *http.Request) {
-	var tour model.Tour
-	err := json.NewDecoder(req.Body).Decode(&tour)
+	var tourDto dto.TourDto
+	err := json.NewDecoder(req.Body).Decode(&tourDto)
 	if err != nil {
 		writer.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
-	equip, err := handler.TourService.CreateTour(&tour)
-	err = json.NewEncoder(writer).Encode(equip)
+	tour := tourDto.MapToModel()
+	createdTour, err := handler.TourService.CreateTour(tour)
+	if err != nil {
+		writer.WriteHeader(http.StatusExpectationFailed)
+		return
+	}
+
+	err = json.NewEncoder(writer).Encode(dto.MapFromModel(*createdTour))
 	if err != nil {
 		writer.WriteHeader(http.StatusExpectationFailed)
 		return
@@ -68,17 +79,27 @@ func (handler *TourHandler) Update(writer http.ResponseWriter, req *http.Request
 	params := mux.Vars(req)
 	idStr := params["id"]
 	id, err := strconv.ParseInt(idStr, 10, 64)
-
-	var tour model.Tour
-	err = json.NewDecoder(req.Body).Decode(&tour)
 	if err != nil {
 		writer.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
+	var tourDto dto.TourDto
+	err = json.NewDecoder(req.Body).Decode(&tourDto)
+	if err != nil {
+		writer.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	tour := tourDto.MapToModel()
 	tour.Id = id
-	equip, err := handler.TourService.UpdateTour(&tour)
-	err = json.NewEncoder(writer).Encode(equip)
+	updatedTour, err := handler.TourService.UpdateTour(tour)
+	if err != nil {
+		writer.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	err = json.NewEncoder(writer).Encode(dto.MapFromModel(*updatedTour))
 	if err != nil {
 		writer.WriteHeader(http.StatusInternalServerError)
 		return
@@ -97,4 +118,27 @@ func (handler *TourHandler) Delete(writer http.ResponseWriter, req *http.Request
 		return
 	}
 	writer.WriteHeader(http.StatusOK)
+}
+
+func (handler *TourHandler) GetByAuthor(writer http.ResponseWriter, req *http.Request) {
+	idStr := mux.Vars(req)["id"]
+	id, err := strconv.ParseInt(idStr, 10, 64)
+
+	tours, err := handler.TourService.FindToursByAuthor(id)
+	writer.Header().Set("Content-Type", "application/json")
+	if err != nil {
+		writer.WriteHeader(http.StatusNotFound)
+		return
+	}
+
+	tourDtos := make([]dto.TourDto, len(tours))
+	for i, tour := range tours {
+		tourDtos[i] = dto.MapFromModel(tour)
+	}
+
+	err = json.NewEncoder(writer).Encode(tourDtos)
+	if err != nil {
+		writer.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 }

@@ -10,10 +10,10 @@ type TourService struct {
 	TourRepo *repo.TourRepository
 }
 
-func (service *TourService) FindAllTour() ([]model.Tour, error) {
+func (service *TourService) FindAllTours() ([]model.Tour, error) {
 	tours, err := service.TourRepo.FindAll()
 	if err != nil {
-		return nil, fmt.Errorf("failed to retrieve tour: %v", err)
+		return nil, fmt.Errorf("failed to retrieve tours: %v", err)
 	}
 	return tours, nil
 }
@@ -48,4 +48,12 @@ func (service *TourService) DeleteTour(id int64) error {
 		return fmt.Errorf("failed to delete tour with ID %d: %v", id, err)
 	}
 	return nil
+}
+
+func (service *TourService) FindToursByAuthor(id int64) ([]model.Tour, error) {
+	tours, err := service.TourRepo.FindByAuthor(id)
+	if err != nil {
+		return nil, fmt.Errorf("failed to retrieve tours: %v", err)
+	}
+	return tours, nil
 }

@@ -9,14 +9,14 @@ import (
 
 type Tour struct {
 	Id          int64          `gorm:"primaryKey"`
-	AuthorId    int64          `json:"author_id"`
-	Name        string         `json:"name"`
-	Description string         `json:"description"`
-	Difficulty  Difficulty     `json:"difficulty"`
-	Status      TourStatus     `json:"status"`
-	Price       float64        `json:"price"`
-	Tags        pq.StringArray `json:"tags" gorm:"type:text[]"`
-	Equipment   []Equipment    `json:"equipment" gorm:"many2many:tour_equipment"`
+	AuthorId    int64          `json:"AuthorId"`
+	Name        string         `json:"Name"`
+	Description string         `json:"Description"`
+	Difficulty  Difficulty     `json:"Difficulty"`
+	Status      Status         `json:"Status"`
+	Price       float64        `json:"Price"`
+	Tags        pq.StringArray `json:"Tags" gorm:"type:text[]"`
+	Equipment   []Equipment    `json:"Equipment" gorm:"many2many:tour_equipment"`
 }
 
 func (t *Tour) BeforeCreate(scope *gorm.DB) error {
@@ -43,19 +43,3 @@ func (t *Tour) Validate() error {
 
 	return nil
 }
-
-type TourStatus int
-
-const (
-	Draft TourStatus = iota
-	Published
-	Archived
-)
-
-type Difficulty int
-
-const (
-	Easy Difficulty = iota
-	Medium
-	Hard
-)

@@ -48,20 +48,24 @@ func startServer(database *gorm.DB) {
 }
 
 func initEquipmentHandler(equipmentHandler *handler.EquipmentHandler, router *mux.Router) {
-	router.HandleFunc("/tours/equipment", equipmentHandler.GetAll).Methods("GET")
-	router.HandleFunc("/tours/equipment", equipmentHandler.Create).Methods("POST")
-	router.HandleFunc("/tours/equipment/{id}", equipmentHandler.Get).Methods("GET")
-	router.HandleFunc("/tours/equipment/{id}", equipmentHandler.Update).Methods("PUT")
-	router.HandleFunc("/tours/equipment/{id}", equipmentHandler.Delete).Methods("DELETE")
-	router.HandleFunc("/tours/{id}/equipment/available", equipmentHandler.GetAvailable).Methods("GET")
+	v1 := router.PathPrefix("/v1/tours").Subrouter()
+	v1.HandleFunc("/equipment", equipmentHandler.GetAll).Methods("GET")
+	v1.HandleFunc("/equipment", equipmentHandler.Create).Methods("POST")
+	v1.HandleFunc("/equipment/{id}", equipmentHandler.Get).Methods("GET")
+	v1.HandleFunc("/equipment/{id}", equipmentHandler.Update).Methods("PUT")
+	v1.HandleFunc("/equipment/{id}", equipmentHandler.Delete).Methods("DELETE")
+	v1.HandleFunc("/{id}/equipment/available", equipmentHandler.GetAvailable).Methods("GET")
 }
 
 func initTourHandler(tourHandler *handler.TourHandler, router *mux.Router) {
-	router.HandleFunc("/tours/tour", tourHandler.GetAll).Methods("GET")
-	router.HandleFunc("/tours/tour", tourHandler.Create).Methods("POST")
-	router.HandleFunc("/tours/tour/{id}", tourHandler.Get).Methods("GET")
-	router.HandleFunc("/tours/tour/{id}", tourHandler.Update).Methods("PUT")
-	router.HandleFunc("/tours/tour/{id}", tourHandler.Delete).Methods("DELETE")
+	v1 := router.PathPrefix("/v1/tours").Subrouter()
+	v1.HandleFunc("", tourHandler.GetAll).Methods("GET")
+	v1.HandleFunc("", tourHandler.Create).Methods("POST")
+	v1.HandleFunc("/{id}", tourHandler.Get).Methods("GET")
+	v1.HandleFunc("/{id}", tourHandler.Update).Methods("PUT")
+	v1.HandleFunc("/{id}", tourHandler.Delete).Methods("DELETE")
+	v1.HandleFunc("/{id}", tourHandler.Delete).Methods("DELETE")
+	v1.HandleFunc("/author/{id}", tourHandler.GetByAuthor).Methods("GET")
 }
 
 func main() {

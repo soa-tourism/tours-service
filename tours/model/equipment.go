@@ -8,8 +8,8 @@ import (
 
 type Equipment struct {
 	Id          int64  `gorm:"primaryKey"`
-	Name        string `json:"name"`
-	Description string `json:"description"`
+	Name        string `json:"Name"`
+	Description string `json:"Description"`
 }
 
 func (e *Equipment) BeforeCreate(scope *gorm.DB) error {
