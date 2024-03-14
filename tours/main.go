@@ -24,6 +24,7 @@ func initDB() *gorm.DB {
 
 	err = database.AutoMigrate(
 		&model.Equipment{},
+		&model.Tour{},
 	)
 	if err != nil {
 		log.Fatalf("Error migrating models: %v", err)
@@ -32,10 +33,14 @@ func initDB() *gorm.DB {
 	return database
 }
 
-func startServer(equipmentHandler *handler.EquipmentHandler) {
+func startServer(database *gorm.DB) {
+	equipmentHandler := initEquipment(database)
+	tourHandler := initTour(database)
+
 	router := mux.NewRouter().StrictSlash(true)
 
 	initEquipmentHandler(equipmentHandler, router)
+	initTourHandler(tourHandler, router)
 
 	println("Server starting...")
 	log.Fatal(http.ListenAndServe(":8081", router))
@@ -51,6 +56,14 @@ func initEquipmentHandler(equipmentHandler *handler.EquipmentHandler, router *mu
 	router.HandleFunc("/tours/{id}/equipment/available", equipmentHandler.GetAvailable).Methods("GET")
 }
 
+func initTourHandler(tourHandler *handler.TourHandler, router *mux.Router) {
+	router.HandleFunc("/tours/tour", tourHandler.GetAll).Methods("GET")
+	router.HandleFunc("/tours/tour", tourHandler.Create).Methods("POST")
+	router.HandleFunc("/tours/tour/{id}", tourHandler.Get).Methods("GET")
+	router.HandleFunc("/tours/tour/{id}", tourHandler.Update).Methods("PUT")
+	router.HandleFunc("/tours/tour/{id}", tourHandler.Delete).Methods("DELETE")
+}
+
 func main() {
 	database := initDB()
 	if database == nil {
@@ -58,9 +71,7 @@ func main() {
 		return
 	}
 
-	equipmentHandler := initEquipment(database)
-
-	startServer(equipmentHandler)
+	startServer(database)
 }
 
 func initEquipment(database *gorm.DB) *handler.EquipmentHandler {
@@ -68,4 +79,11 @@ func initEquipment(database *gorm.DB) *handler.EquipmentHandler {
 	equipmentService := &service.EquipmentService{EquipmentRepo: equipmentRepo}
 	equipmentHandler := &handler.EquipmentHandler{EquipmentService: equipmentService}
 	return equipmentHandler
+}
+
+func initTour(database *gorm.DB) *handler.TourHandler {
+	tourRepo := &repo.TourRepository{DB: database}
+	tourService := &service.TourService{TourRepo: tourRepo}
+	tourHandler := &handler.TourHandler{TourService: tourService}
+	return tourHandler
 }
