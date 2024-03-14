@@ -49,3 +49,11 @@ func (service *EquipmentService) DeleteEquipment(id int64) error {
 	}
 	return nil
 }
+
+func (service *EquipmentService) GetAvailableEquipment(tourId int64, equipmentIds []int64) ([]model.Equipment, error) {
+	availableEquipment, err := service.EquipmentRepo.GetAvailable(equipmentIds)
+	if err != nil {
+		return nil, fmt.Errorf("failed to retrieve equipment: %v", err)
+	}
+	return availableEquipment, nil
+}

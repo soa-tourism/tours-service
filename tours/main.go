@@ -48,6 +48,7 @@ func initEquipmentHandler(equipmentHandler *handler.EquipmentHandler, router *mu
 	router.HandleFunc("/tours/equipment/{id}", equipmentHandler.Get).Methods("GET")
 	router.HandleFunc("/tours/equipment/{id}", equipmentHandler.Update).Methods("PUT")
 	router.HandleFunc("/tours/equipment/{id}", equipmentHandler.Delete).Methods("DELETE")
+	router.HandleFunc("/tours/{id}/equipment/available", equipmentHandler.GetAvailable).Methods("GET")
 }
 
 func main() {
@@ -63,7 +64,7 @@ func main() {
 }
 
 func initEquipment(database *gorm.DB) *handler.EquipmentHandler {
-	equipmentRepo := &repo.EquipmentRepository{DatabaseConnection: database}
+	equipmentRepo := &repo.EquipmentRepository{DB: database}
 	equipmentService := &service.EquipmentService{EquipmentRepo: equipmentRepo}
 	equipmentHandler := &handler.EquipmentHandler{EquipmentService: equipmentService}
 	return equipmentHandler
