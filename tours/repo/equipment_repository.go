@@ -28,20 +28,20 @@ func (repo *EquipmentRepository) FindById(id int64) (model.Equipment, error) {
 	return equipment, nil
 }
 
-func (repo *EquipmentRepository) Create(equipment *model.Equipment) (*model.Equipment, error) {
+func (repo *EquipmentRepository) Create(equipment *model.Equipment) (model.Equipment, error) {
 	dbResult := repo.DB.Create(equipment)
 	if dbResult.Error != nil {
-		return nil, dbResult.Error
+		return model.Equipment{}, dbResult.Error
 	}
-	return equipment, nil
+	return *equipment, nil
 }
 
-func (repo *EquipmentRepository) Update(equipment *model.Equipment) (*model.Equipment, error) {
+func (repo *EquipmentRepository) Update(equipment *model.Equipment) (model.Equipment, error) {
 	dbResult := repo.DB.Save(equipment)
 	if dbResult.Error != nil {
-		return nil, dbResult.Error
+		return model.Equipment{}, dbResult.Error
 	}
-	return equipment, nil
+	return *equipment, nil
 }
 
 func (repo *EquipmentRepository) Delete(id int64) error {

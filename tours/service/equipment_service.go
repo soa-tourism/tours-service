@@ -11,11 +11,11 @@ type EquipmentService struct {
 }
 
 func (service *EquipmentService) FindAllEquipment() ([]model.Equipment, error) {
-	equipments, err := service.EquipmentRepo.FindAll()
+	equipment, err := service.EquipmentRepo.FindAll()
 	if err != nil {
 		return nil, fmt.Errorf("failed to retrieve equipment: %v", err)
 	}
-	return equipments, nil
+	return equipment, nil
 }
 
 func (service *EquipmentService) FindEquipment(id int64) (*model.Equipment, error) {
@@ -27,19 +27,19 @@ func (service *EquipmentService) FindEquipment(id int64) (*model.Equipment, erro
 }
 
 func (service *EquipmentService) CreateEquipment(equipment *model.Equipment) (*model.Equipment, error) {
-	equip, err := service.EquipmentRepo.Create(equipment)
+	createdEquipment, err := service.EquipmentRepo.Create(equipment)
 	if err != nil {
-		return equip, fmt.Errorf("failed to create equipment: %v", err)
+		return nil, fmt.Errorf("failed to create equipment: %v", err)
 	}
-	return equip, nil
+	return &createdEquipment, nil
 }
 
 func (service *EquipmentService) UpdateEquipment(equipment *model.Equipment) (*model.Equipment, error) {
-	equip, err := service.EquipmentRepo.Update(equipment)
+	updatedEquipment, err := service.EquipmentRepo.Update(equipment)
 	if err != nil {
-		return equip, fmt.Errorf("failed to update equipment: %v", err)
+		return nil, fmt.Errorf("failed to update equipment: %v", err)
 	}
-	return equip, nil
+	return &updatedEquipment, nil
 }
 
 func (service *EquipmentService) DeleteEquipment(id int64) error {
