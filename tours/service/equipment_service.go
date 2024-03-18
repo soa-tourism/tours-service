@@ -23,7 +23,7 @@ func (service *EquipmentService) FindEquipment(id int64) (*model.Equipment, erro
 	if err != nil {
 		return nil, fmt.Errorf("equipment with ID %d not found", id)
 	}
-	return &equipment, nil
+	return equipment, nil
 }
 
 func (service *EquipmentService) CreateEquipment(equipment *model.Equipment) (*model.Equipment, error) {

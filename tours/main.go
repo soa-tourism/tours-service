@@ -73,6 +73,8 @@ func initTourHandler(tourHandler *handler.TourHandler, router *mux.Router) {
 	v1.HandleFunc("/{id}", tourHandler.Delete).Methods("DELETE")
 	v1.HandleFunc("/{id}", tourHandler.Delete).Methods("DELETE")
 	v1.HandleFunc("/author/{id}", tourHandler.GetByAuthor).Methods("GET")
+	v1.HandleFunc("/{id}/equipment/{equipmentId}", tourHandler.AddEquipment).Methods("POST")
+	v1.HandleFunc("/{id}/equipment/{equipmentId}", tourHandler.RemoveEquipment).Methods("DELETE")
 }
 
 //// TODO - fix route
@@ -109,6 +111,7 @@ func initEquipment(database *gorm.DB) *handler.EquipmentHandler {
 	equipmentRepo := &repo.EquipmentRepository{DB: database}
 	equipmentService := &service.EquipmentService{EquipmentRepo: equipmentRepo}
 	equipmentHandler := &handler.EquipmentHandler{EquipmentService: equipmentService}
+
 	return equipmentHandler
 }
 
@@ -116,6 +119,7 @@ func initTour(database *gorm.DB) *handler.TourHandler {
 	tourRepo := &repo.TourRepository{DB: database}
 	tourService := &service.TourService{TourRepo: tourRepo}
 	tourHandler := &handler.TourHandler{TourService: tourService}
+
 	return tourHandler
 }
 

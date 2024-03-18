@@ -142,3 +142,43 @@ func (handler *TourHandler) GetByAuthor(writer http.ResponseWriter, req *http.Re
 		return
 	}
 }
+
+func (handler *TourHandler) AddEquipment(writer http.ResponseWriter, req *http.Request) {
+	params := mux.Vars(req)
+	idStr := params["id"]
+	equipmentIdStr := params["equipmentId"]
+	id, err := strconv.ParseInt(idStr, 10, 64)
+	equipmentId, err := strconv.ParseInt(equipmentIdStr, 10, 64)
+
+	if err != nil {
+		writer.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	err = handler.TourService.AddEquipment(id, equipmentId)
+	if err != nil {
+		writer.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	writer.WriteHeader(http.StatusOK)
+}
+
+func (handler *TourHandler) RemoveEquipment(writer http.ResponseWriter, req *http.Request) {
+	params := mux.Vars(req)
+	idStr := params["id"]
+	equipmentIdStr := params["equipmentId"]
+	id, err := strconv.ParseInt(idStr, 10, 64)
+	equipmentId, err := strconv.ParseInt(equipmentIdStr, 10, 64)
+
+	if err != nil {
+		writer.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	err = handler.TourService.RemoveEquipment(id, equipmentId)
+	if err != nil {
+		writer.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	writer.WriteHeader(http.StatusOK)
+}

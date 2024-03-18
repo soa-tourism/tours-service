@@ -19,13 +19,13 @@ func (repo *TourRepository) FindAll() ([]model.Tour, error) {
 	return tours, nil
 }
 
-func (repo *TourRepository) FindById(id int64) (model.Tour, error) {
+func (repo *TourRepository) FindById(id int64) (*model.Tour, error) {
 	tour := model.Tour{}
-	dbResult := repo.DB.First(&tour, "id = ?", id)
+	dbResult := repo.DB.Preload("Equipment").First(&tour, id)
 	if dbResult.Error != nil {
-		return tour, dbResult.Error
+		return &tour, dbResult.Error
 	}
-	return tour, nil
+	return &tour, nil
 }
 
 func (repo *TourRepository) Create(tour *model.Tour) (model.Tour, error) {
@@ -37,6 +37,7 @@ func (repo *TourRepository) Create(tour *model.Tour) (model.Tour, error) {
 }
 
 func (repo *TourRepository) Update(tour *model.Tour) (model.Tour, error) {
+	tour.Equipment = nil
 	dbResult := repo.DB.Save(tour)
 	if dbResult.Error != nil {
 		return model.Tour{}, dbResult.Error
@@ -59,4 +60,29 @@ func (repo *TourRepository) FindByAuthor(id int64) ([]model.Tour, error) {
 		return nil, dbResult.Error
 	}
 	return tours, nil
+}
+
+func (repo *TourRepository) AddEquipment(tourId int64, equipmentId int64) error {
+	if err := repo.DB.Create(
+		&model.TourEquipment{
+			TourId:      tourId,
+			EquipmentId: equipmentId,
+		}).Error; err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (repo *TourRepository) RemoveEquipment(tourId int64, equipmentId int64) error {
+	if err := repo.DB.Delete(
+		&model.TourEquipment{},
+		"tour_id = ?  AND equipment_id = ?",
+		tourId,
+		equipmentId,
+	).Error; err != nil {
+		return err
+	}
+
+	return nil
 }

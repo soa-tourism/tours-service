@@ -16,12 +16,16 @@ type Tour struct {
 	Status      Status         `json:"Status"`
 	Price       float64        `json:"Price"`
 	Tags        pq.StringArray `json:"Tags" gorm:"type:text[]"`
-	Equipment   []Equipment    `json:"Equipment" gorm:"many2many:tour_equipment"`
+	Equipment   []Equipment    `json:"Equipment" gorm:"many2many:tour_equipments"`
 }
 
 func (t *Tour) BeforeCreate(scope *gorm.DB) error {
 	if err := t.Validate(); err != nil {
 		return err
+	}
+
+	if t.Equipment == nil {
+		t.Equipment = []Equipment{}
 	}
 
 	uid := uuid.New()

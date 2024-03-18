@@ -19,13 +19,13 @@ func (repo *EquipmentRepository) FindAll() ([]model.Equipment, error) {
 	return equipments, nil
 }
 
-func (repo *EquipmentRepository) FindById(id int64) (model.Equipment, error) {
+func (repo *EquipmentRepository) FindById(id int64) (*model.Equipment, error) {
 	equipment := model.Equipment{}
-	dbResult := repo.DB.First(&equipment, "id = ?", id)
+	dbResult := repo.DB.First(&equipment, id)
 	if dbResult.Error != nil {
-		return equipment, dbResult.Error
+		return &equipment, dbResult.Error
 	}
-	return equipment, nil
+	return &equipment, nil
 }
 
 func (repo *EquipmentRepository) Create(equipment *model.Equipment) (model.Equipment, error) {
