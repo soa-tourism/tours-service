@@ -13,7 +13,7 @@ type PublicCheckpoint struct {
 	Latitude    float64  `json:"Latitude"`
 	Name        string   `json:"Name"`
 	Description string   `json:"Description"`
-	Pictures    []string `json:"Pictures"`
+	Pictures    []string `json:"Pictures" gorm:"type:text[]"`
 }
 
 func (pch *PublicCheckpoint) BeforeCreate(scope *gorm.DB) error {
