@@ -28,6 +28,7 @@ func initDB() *gorm.DB {
 		&model.Tour{},
 		&model.PublicCheckpoint{},
 		&model.Checkpoint{},
+		&model.TouristPosition{},
 	)
 	if err != nil {
 		log.Fatalf("Error migrating models: %v", err)
@@ -41,6 +42,7 @@ func startServer(database *gorm.DB) {
 	tourHandler := initTour(database)
 	publicCheckpointHandler := initPublicCheckpoint(database)
 	checkpointHandler := initCheckpoint(database)
+	touristPositionHandler := initTouristPosition(database)
 
 	router := mux.NewRouter().StrictSlash(true)
 
@@ -48,6 +50,7 @@ func startServer(database *gorm.DB) {
 	initTourHandler(tourHandler, router)
 	initPublicCheckpointHandler(publicCheckpointHandler, router)
 	initCheckpointHandler(checkpointHandler, router)
+	initTouristPositionHandler(touristPositionHandler, router)
 
 	println("Server starting...")
 	log.Fatal(http.ListenAndServe(":8081", router))
@@ -97,6 +100,15 @@ func initCheckpointHandler(checkpointHandler *handler.CheckpointHandler, router 
 	v1.HandleFunc("/checkpoint/{id}", checkpointHandler.GetByTour).Methods("GET")
 }
 
+func initTouristPositionHandler(touristPositionHandler *handler.TouristPositionHandler, router *mux.Router) {
+	v1 := router.PathPrefix("/v1/tours").Subrouter()
+	v1.HandleFunc("/position", touristPositionHandler.GetAll).Methods("GET")
+	v1.HandleFunc("/position/{id}", touristPositionHandler.Get).Methods("GET")
+	v1.HandleFunc("/position", touristPositionHandler.Create).Methods("POST")
+	v1.HandleFunc("/position/{id}", touristPositionHandler.Update).Methods("PUT")
+	v1.HandleFunc("/position/{id}", touristPositionHandler.Delete).Methods("DELETE")
+}
+
 func main() {
 	database := initDB()
 	if database == nil {
@@ -135,4 +147,11 @@ func initCheckpoint(database *gorm.DB) *handler.CheckpointHandler {
 	checkpointService := &service.CheckpointService{CheckpointRepo: checkpointRepo}
 	checkpointHandler := &handler.CheckpointHandler{CheckpointService: checkpointService}
 	return checkpointHandler
+}
+
+func initTouristPosition(database *gorm.DB) *handler.TouristPositionHandler {
+	touristPositionRepo := &repo.TouristPositionRepository{DB: database}
+	touristPositionService := &service.TouristPositionService{TouristPositionRepo: touristPositionRepo}
+	touristPositionHandler := &handler.TouristPositionHandler{TouristPositionService: touristPositionService}
+	return touristPositionHandler
 }
