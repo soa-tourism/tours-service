@@ -155,3 +155,34 @@ func (handler *CheckpointHandler) GetByTour(writer http.ResponseWriter, req *htt
 		return
 	}
 }
+
+func (handler *CheckpointHandler) UpdateCheckpointSecret(writer http.ResponseWriter, req *http.Request) {
+	idStr := mux.Vars(req)["id"]
+	id, err := strconv.ParseInt(idStr, 10, 64)
+	if err != nil {
+		writer.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	var secretDto dto.CheckpointSecretDto
+	err = json.NewDecoder(req.Body).Decode(&secretDto)
+	if err != nil {
+		writer.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	secret, _ := secretDto.MapToModel()
+	checkpointDto, err := handler.CheckpointService.UpdateCheckpointSecret(id, secret)
+	if err != nil {
+		writer.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	err = json.NewEncoder(writer).Encode(checkpointDto)
+	if err != nil {
+		writer.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	writer.WriteHeader(http.StatusOK)
+	writer.Header().Set("Content-Type", "application/json")
+}

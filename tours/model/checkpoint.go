@@ -4,6 +4,7 @@ import (
 	"errors"
 
 	"github.com/google/uuid"
+	"github.com/lib/pq"
 	"gorm.io/gorm"
 )
 
@@ -11,16 +12,16 @@ type Checkpoint struct {
 	Id                    int64 `gorm:"primaryKey"`
 	TourId                int64 `json:"TourId"`
 	Tour                  Tour
-	AuthorId              int64    `json:"AuthorId"`
-	Longitude             float64  `json:"Longitude"`
-	Latitude              float64  `json:"Latitude"`
-	Name                  string   `json:"Name"`
-	Description           string   `json:"Description"`
-	Pictures              []string `json:"Pictures" gorm:"type:text[]"`
-	RequiredTimeInSeconds float64  `json:"RequiredTimeInSeconds"`
-	IsSecretPrerequisite  bool     `json:"IsSecretPrerequisite"`
-	EncounterId           int64    `json:"EncounterId"`
-	// CheckpointSecret      CheckpointSecret `json:"CheckpointSecret"`
+	AuthorId              int64            `json:"AuthorId"`
+	Longitude             float64          `json:"Longitude"`
+	Latitude              float64          `json:"Latitude"`
+	Name                  string           `json:"Name"`
+	Description           string           `json:"Description"`
+	Pictures              pq.StringArray   `json:"Pictures" gorm:"type:text[]"`
+	RequiredTimeInSeconds float64          `json:"RequiredTimeInSeconds"`
+	IsSecretPrerequisite  bool             `json:"IsSecretPrerequisite"`
+	EncounterId           int64            `json:"EncounterId"`
+	CheckpointSecret      CheckpointSecret `json:"CheckpointSecret" gorm:"type:json"`
 }
 
 func (ch *Checkpoint) BeforeCreate(scope *gorm.DB) error {
@@ -57,20 +58,20 @@ func (ch *Checkpoint) Validate() error {
 	return nil
 }
 
-// func (c *Checkpoint) UpdateCheckpointSecret(description string, pictures []string) error {
-// 	newSecret, err := NewCheckpointSecret(description, pictures)
-// 	if err != nil {
-// 		return err
-// 	}
-// 	c.CheckpointSecret = *newSecret
+func (c *Checkpoint) UpdateCheckpointSecret(description string, pictures []string) error {
+	newSecret, err := NewCheckpointSecret(description, pictures)
+	if err != nil {
+		return err
+	}
+	c.CheckpointSecret = *newSecret
 
-// 	return nil
-// }
+	return nil
+}
 
-// func (c *Checkpoint) DeleteCheckpointSecret() {
-// 	c.CheckpointSecret = CheckpointSecret{} // Reset the checkpoint secret
-// }
+func (c *Checkpoint) DeleteCheckpointSecret() {
+	c.CheckpointSecret = CheckpointSecret{} // Reset the checkpoint secret
+}
 
-// func (c *Checkpoint) IsAuthor(userId int) bool {
-// 	return c.AuthorId == int64(userId)
-// }
+func (c *Checkpoint) IsAuthor(userId int) bool {
+	return c.AuthorId == int64(userId)
+}

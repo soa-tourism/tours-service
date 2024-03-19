@@ -60,3 +60,12 @@ func (repo *CheckpointRepository) FindByTour(id int64) ([]model.Checkpoint, erro
 	}
 	return checkpoints, nil
 }
+
+func (repo *CheckpointRepository) UpdateCheckpointSecret(checkpoint *model.Checkpoint, secret *model.CheckpointSecret) (model.Checkpoint, error) {
+	checkpoint.UpdateCheckpointSecret(secret.Description, secret.Pictures)
+	dbResult := repo.DB.Save(checkpoint)
+	if dbResult.Error != nil {
+		return model.Checkpoint{}, dbResult.Error
+	}
+	return *checkpoint, nil
+}
