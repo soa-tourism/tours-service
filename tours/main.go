@@ -81,7 +81,7 @@ func initTourHandler(tourHandler *handler.TourHandler, router *mux.Router) {
 }
 
 func initPublicCheckpointHandler(publicCheckpointHandler *handler.PublicCheckpointHandler, router *mux.Router) {
-	v1 := router.PathPrefix("/v1/tours/publicCheckpoint").Subrouter()
+	v1 := router.PathPrefix("/v1/publicCheckpoint").Subrouter()
 	v1.HandleFunc("", publicCheckpointHandler.GetAll).Methods("GET")
 	v1.HandleFunc("/details/{id}", publicCheckpointHandler.Get).Methods("GET")
 	v1.HandleFunc("", publicCheckpointHandler.Create).Methods("POST")
@@ -90,7 +90,7 @@ func initPublicCheckpointHandler(publicCheckpointHandler *handler.PublicCheckpoi
 }
 
 func initCheckpointHandler(checkpointHandler *handler.CheckpointHandler, router *mux.Router) {
-	v1 := router.PathPrefix("/v1/tours/checkpoint").Subrouter()
+	v1 := router.PathPrefix("/v1/checkpoint").Subrouter()
 	v1.HandleFunc("/", checkpointHandler.GetAll).Methods("GET")
 	v1.HandleFunc("/details/{id}", checkpointHandler.Get).Methods("GET")
 	v1.HandleFunc("", checkpointHandler.Create).Methods("POST")
@@ -102,7 +102,7 @@ func initCheckpointHandler(checkpointHandler *handler.CheckpointHandler, router 
 }
 
 func initTouristPositionHandler(touristPositionHandler *handler.TouristPositionHandler, router *mux.Router) {
-	v1 := router.PathPrefix("/v1/tours/position").Subrouter()
+	v1 := router.PathPrefix("/v1/position").Subrouter()
 	v1.HandleFunc("", touristPositionHandler.GetAll).Methods("GET")
 	v1.HandleFunc("/{id}", touristPositionHandler.Get).Methods("GET")
 	v1.HandleFunc("", touristPositionHandler.Create).Methods("POST")
