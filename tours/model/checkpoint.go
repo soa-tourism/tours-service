@@ -9,9 +9,8 @@ import (
 )
 
 type Checkpoint struct {
-	Id                    int64 `gorm:"primaryKey"`
-	TourId                int64 `json:"TourId"`
-	Tour                  Tour
+	Id                    int64            `gorm:"primaryKey"`
+	TourId                int64            `json:"TourId"`
 	AuthorId              int64            `json:"AuthorId"`
 	Longitude             float64          `json:"Longitude"`
 	Latitude              float64          `json:"Latitude"`

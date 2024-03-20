@@ -8,7 +8,7 @@ type PublicCheckpointDto struct {
 	Latitude    float64  `json:"Latitude"`
 	Name        string   `json:"Name"`
 	Description string   `json:"Description"`
-	Pictures    []string `json:"Pictures" gorm:"type:text[]"`
+	Pictures    []string `json:"Pictures"`
 }
 
 func (dto *PublicCheckpointDto) MapToModel() *model.PublicCheckpoint {
