@@ -98,7 +98,7 @@ func initCheckpointHandler(checkpointHandler *handler.CheckpointHandler, router 
 	v1.HandleFunc("/{id}", checkpointHandler.Delete).Methods("DELETE")
 	v1.HandleFunc("/{id}", checkpointHandler.GetByTour).Methods("GET")
 	v1.HandleFunc("/createSecret/{id}", checkpointHandler.UpdateCheckpointSecret).Methods("PUT")
-	//v1.HandleFunc("/encounter/{checkpointId}/{encounterId}/{}", checkpointHandler.Update).Methods("PUT")
+	v1.HandleFunc("/encounter/{checkpointId}/{encounterId}/{isSecretPrerequisite}", checkpointHandler.UpdateCheckpointEncounter).Methods("PUT")
 }
 
 func initTouristPositionHandler(touristPositionHandler *handler.TouristPositionHandler, router *mux.Router) {
