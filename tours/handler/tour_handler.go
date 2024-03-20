@@ -23,7 +23,7 @@ func (handler *TourHandler) GetAll(writer http.ResponseWriter, req *http.Request
 
 	tourDtos := make([]dto.TourDto, len(tours))
 	for i, tour := range tours {
-		tourDtos[i] = dto.MapFromModel(tour)
+		tourDtos[i] = dto.MapFromTour(tour)
 	}
 
 	err = json.NewEncoder(writer).Encode(tourDtos)
@@ -44,7 +44,7 @@ func (handler *TourHandler) Get(writer http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	err = json.NewEncoder(writer).Encode(dto.MapFromModel(*tour))
+	err = json.NewEncoder(writer).Encode(dto.MapFromTour(*tour))
 	if err != nil {
 		writer.WriteHeader(http.StatusInternalServerError)
 		return
@@ -66,7 +66,7 @@ func (handler *TourHandler) Create(writer http.ResponseWriter, req *http.Request
 		return
 	}
 
-	err = json.NewEncoder(writer).Encode(dto.MapFromModel(*createdTour))
+	err = json.NewEncoder(writer).Encode(dto.MapFromTour(*createdTour))
 	if err != nil {
 		writer.WriteHeader(http.StatusExpectationFailed)
 		return
@@ -99,7 +99,7 @@ func (handler *TourHandler) Update(writer http.ResponseWriter, req *http.Request
 		return
 	}
 
-	err = json.NewEncoder(writer).Encode(dto.MapFromModel(*updatedTour))
+	err = json.NewEncoder(writer).Encode(dto.MapFromTour(*updatedTour))
 	if err != nil {
 		writer.WriteHeader(http.StatusInternalServerError)
 		return
@@ -133,7 +133,7 @@ func (handler *TourHandler) GetByAuthor(writer http.ResponseWriter, req *http.Re
 
 	tourDtos := make([]dto.TourDto, len(tours))
 	for i, tour := range tours {
-		tourDtos[i] = dto.MapFromModel(tour)
+		tourDtos[i] = dto.MapFromTour(tour)
 	}
 
 	err = json.NewEncoder(writer).Encode(tourDtos)

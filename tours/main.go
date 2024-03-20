@@ -26,6 +26,7 @@ func initDB() *gorm.DB {
 	err = database.AutoMigrate(
 		&model.Equipment{},
 		&model.Tour{},
+		&model.TourReview{},
 		// &model.PublicCheckpoint{},
 		// &model.Checkpoint{},
 	)
@@ -39,19 +40,25 @@ func initDB() *gorm.DB {
 func startServer(database *gorm.DB) {
 	equipmentHandler := initEquipment(database)
 	tourHandler := initTour(database)
+	publishedTourHandler := initPublishedTour(database)
+	tourReviewHandler := initTourReview(database)
+	imageHandler := handler.NewImageHandler()
 	// publicCheckpointHandler := initPublicCheckpoint(database)
 	// checkpointHandler := initCheckpoint(database)
 
 	router := mux.NewRouter().StrictSlash(true)
 
+	initImageHandler(imageHandler, router)
 	initEquipmentHandler(equipmentHandler, router)
+	initPublishedTourHandler(publishedTourHandler, router)
+	initTourReviewHandler(tourReviewHandler, router)
 	initTourHandler(tourHandler, router)
+
 	// initPublicCheckpointHandler(publicCheckpointHandler, router)
 	// initCheckpointHandler(checkpointHandler, router)
 
 	println("Server starting...")
 	log.Fatal(http.ListenAndServe(":8081", router))
-
 }
 
 func initEquipmentHandler(equipmentHandler *handler.EquipmentHandler, router *mux.Router) {
@@ -71,10 +78,28 @@ func initTourHandler(tourHandler *handler.TourHandler, router *mux.Router) {
 	v1.HandleFunc("/{id}", tourHandler.Get).Methods("GET")
 	v1.HandleFunc("/{id}", tourHandler.Update).Methods("PUT")
 	v1.HandleFunc("/{id}", tourHandler.Delete).Methods("DELETE")
-	v1.HandleFunc("/{id}", tourHandler.Delete).Methods("DELETE")
 	v1.HandleFunc("/author/{id}", tourHandler.GetByAuthor).Methods("GET")
 	v1.HandleFunc("/{id}/equipment/{equipmentId}", tourHandler.AddEquipment).Methods("POST")
 	v1.HandleFunc("/{id}/equipment/{equipmentId}", tourHandler.RemoveEquipment).Methods("DELETE")
+}
+
+func initPublishedTourHandler(publishedTourHandler *handler.PublishedTourHandler, router *mux.Router) {
+	v1 := router.PathPrefix("/v1/tours/published").Subrouter()
+	v1.HandleFunc("/{id}", publishedTourHandler.Get).Methods("GET")
+	v1.HandleFunc("", publishedTourHandler.GetAllPublished).Methods("GET")
+}
+
+func initTourReviewHandler(tourReviewHandler *handler.TourReviewHandler, router *mux.Router) {
+	v1 := router.PathPrefix("/v1/tours/reviews").Subrouter()
+	v1.HandleFunc("", tourReviewHandler.Create).Methods("POST")
+	v1.HandleFunc("/{id}", tourReviewHandler.Get).Methods("GET")
+	v1.HandleFunc("/tourist/{id}", tourReviewHandler.GetAllByTourist).Methods("GET")
+	v1.HandleFunc("/author/{id}", tourReviewHandler.GetAllByAuthor).Methods("GET")
+}
+
+func initImageHandler(imageHandler *handler.ImageHandler, router *mux.Router) {
+	v1 := router.PathPrefix("/v1/images").Subrouter()
+	v1.HandleFunc("/{image}", imageHandler.ServeImage).Methods("GET")
 }
 
 //// TODO - fix route
@@ -121,6 +146,22 @@ func initTour(database *gorm.DB) *handler.TourHandler {
 	tourHandler := &handler.TourHandler{TourService: tourService}
 
 	return tourHandler
+}
+
+func initPublishedTour(database *gorm.DB) *handler.PublishedTourHandler {
+	publishedTourRepo := &repo.TourRepository{DB: database}
+	publishedTourService := &service.PublishedTourService{TourRepo: publishedTourRepo}
+	publishedTourHandler := &handler.PublishedTourHandler{PublishedTourService: publishedTourService}
+
+	return publishedTourHandler
+}
+
+func initTourReview(database *gorm.DB) *handler.TourReviewHandler {
+	tourReviewRepo := &repo.TourReviewRepository{DB: database}
+	tourReviewService := &service.TourReviewService{TourReviewRepo: tourReviewRepo}
+	tourReviewHandler := &handler.TourReviewHandler{TourReviewService: tourReviewService}
+
+	return tourReviewHandler
 }
 
 // func initPublicCheckpoint(database *gorm.DB) *handler.PublicCheckpointHandler {
