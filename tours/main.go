@@ -29,6 +29,8 @@ func initDB() *gorm.DB {
 		&model.PublicCheckpoint{},
 		&model.Checkpoint{},
 		&model.TouristPosition{},
+		&model.TourExecution{},
+		&model.CheckpointCompletition{},
 	)
 	if err != nil {
 		log.Fatalf("Error migrating models: %v", err)
@@ -43,6 +45,7 @@ func startServer(database *gorm.DB) {
 	publicCheckpointHandler := initPublicCheckpoint(database)
 	checkpointHandler := initCheckpoint(database)
 	touristPositionHandler := initTouristPosition(database)
+	tourExecutionHandler := initTourExecution(database)
 
 	router := mux.NewRouter().StrictSlash(true)
 
@@ -51,6 +54,7 @@ func startServer(database *gorm.DB) {
 	initPublicCheckpointHandler(publicCheckpointHandler, router)
 	initCheckpointHandler(checkpointHandler, router)
 	initTouristPositionHandler(touristPositionHandler, router)
+	initTourExecutionHandler(tourExecutionHandler, router)
 
 	println("Server starting...")
 	log.Fatal(http.ListenAndServe(":8081", router))
@@ -110,6 +114,15 @@ func initTouristPositionHandler(touristPositionHandler *handler.TouristPositionH
 	v1.HandleFunc("/{id}", touristPositionHandler.Delete).Methods("DELETE")
 }
 
+func initTourExecutionHandler(tourExecutionHandler *handler.TourExecutionHandler, router *mux.Router) {
+	v1 := router.PathPrefix("/v1/execution").Subrouter()
+	v1.HandleFunc("", tourExecutionHandler.GetAll).Methods("GET")
+	v1.HandleFunc("/{id}", tourExecutionHandler.Get).Methods("GET")
+	v1.HandleFunc("", tourExecutionHandler.Create).Methods("POST")
+	v1.HandleFunc("/{id}", tourExecutionHandler.Update).Methods("PUT")
+	v1.HandleFunc("/{id}", tourExecutionHandler.Delete).Methods("DELETE")
+}
+
 func main() {
 	database := initDB()
 	if database == nil {
@@ -155,4 +168,12 @@ func initTouristPosition(database *gorm.DB) *handler.TouristPositionHandler {
 	touristPositionService := &service.TouristPositionService{TouristPositionRepo: touristPositionRepo}
 	touristPositionHandler := &handler.TouristPositionHandler{TouristPositionService: touristPositionService}
 	return touristPositionHandler
+}
+
+func initTourExecution(database *gorm.DB) *handler.TourExecutionHandler {
+	tourExecutionRepo := &repo.TourExecutionRepository{DB: database}
+	tourExecutionService := &service.TourExecutionService{TourExecutionRepo: tourExecutionRepo}
+	tourExecutionHandler := &handler.TourExecutionHandler{TourExecutionService: tourExecutionService}
+
+	return tourExecutionHandler
 }

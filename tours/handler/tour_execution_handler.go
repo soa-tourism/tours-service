@@ -2,8 +2,10 @@ package handler
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strconv"
+	"tours/dto"
 	"tours/model"
 	"tours/service"
 
@@ -14,7 +16,7 @@ type TourExecutionHandler struct {
 	TourExecutionService *service.TourExecutionService
 }
 
-func (handler *TourExecutionHandler) GetAllTourExecutions(writer http.ResponseWriter, req *http.Request) {
+func (handler *TourExecutionHandler) GetAll(writer http.ResponseWriter, req *http.Request) {
 	tourExecutions, err := handler.TourExecutionService.FindAllTourExecutions()
 	writer.Header().Set("Content-Type", "application/json")
 	if err != nil {
@@ -22,14 +24,19 @@ func (handler *TourExecutionHandler) GetAllTourExecutions(writer http.ResponseWr
 		return
 	}
 
-	err = json.NewEncoder(writer).Encode(tourExecutions)
+	tourExecutionDtos := make([]dto.TourExecutionDto, len(tourExecutions))
+	for i, exec := range tourExecutions {
+		tourExecutionDtos[i] = dto.TourExecutionDtoFromModel(exec)
+	}
+
+	err = json.NewEncoder(writer).Encode(tourExecutionDtos)
 	if err != nil {
 		writer.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 }
 
-func (handler *TourExecutionHandler) GetTourExecution(writer http.ResponseWriter, req *http.Request) {
+func (handler *TourExecutionHandler) Get(writer http.ResponseWriter, req *http.Request) {
 	idStr := mux.Vars(req)["id"]
 	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
@@ -44,29 +51,31 @@ func (handler *TourExecutionHandler) GetTourExecution(writer http.ResponseWriter
 		return
 	}
 
-	err = json.NewEncoder(writer).Encode(tourExecution)
+	err = json.NewEncoder(writer).Encode(dto.TourExecutionDtoFromModel(*tourExecution))
 	if err != nil {
 		writer.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 }
 
-func (handler *TourExecutionHandler) CreateTourExecution(writer http.ResponseWriter, req *http.Request) {
-	var tourExecution model.TourExecution
-	err := json.NewDecoder(req.Body).Decode(&tourExecution)
+func (handler *TourExecutionHandler) Create(writer http.ResponseWriter, req *http.Request) {
+	var executionDto dto.TourExecutionDto
+	err := json.NewDecoder(req.Body).Decode(&executionDto)
 	if err != nil {
+		fmt.Println("Error while decoding!")
 		writer.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
-	createdTourExecution, err := handler.TourExecutionService.CreateTourExecution(&tourExecution)
+	tourExecution := executionDto.MapToModel()
+	createdTourExecution, err := handler.TourExecutionService.CreateTourExecution(tourExecution)
 	writer.Header().Set("Content-Type", "application/json")
 	if err != nil {
 		writer.WriteHeader(http.StatusExpectationFailed)
 		return
 	}
 
-	err = json.NewEncoder(writer).Encode(createdTourExecution)
+	err = json.NewEncoder(writer).Encode(dto.TourExecutionDtoFromModel(*createdTourExecution))
 	if err != nil {
 		writer.WriteHeader(http.StatusExpectationFailed)
 		return
@@ -74,7 +83,7 @@ func (handler *TourExecutionHandler) CreateTourExecution(writer http.ResponseWri
 	writer.WriteHeader(http.StatusCreated)
 }
 
-func (handler *TourExecutionHandler) UpdateTourExecution(writer http.ResponseWriter, req *http.Request) {
+func (handler *TourExecutionHandler) Update(writer http.ResponseWriter, req *http.Request) {
 	params := mux.Vars(req)
 	idStr := params["id"]
 	id, err := strconv.ParseInt(idStr, 10, 64)
@@ -105,7 +114,7 @@ func (handler *TourExecutionHandler) UpdateTourExecution(writer http.ResponseWri
 	}
 }
 
-func (handler *TourExecutionHandler) DeleteTourExecution(writer http.ResponseWriter, req *http.Request) {
+func (handler *TourExecutionHandler) Delete(writer http.ResponseWriter, req *http.Request) {
 	idStr := mux.Vars(req)["id"]
 	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {

@@ -9,14 +9,13 @@ import (
 )
 
 type TourExecution struct {
-	Id                   int64 `gorm:"primaryKey"`
-	TouristId            int64 `json:"TouristId"`
-	TourId               int64 `json:"TourId"`
-	Tour                 Tour
+	Id                   int64                    `gorm:"primaryKey"`
+	TouristId            int64                    `json:"TouristId"`
+	TourId               int64                    `json:"TourId"`
 	Start                time.Time                `json:"Start"`
 	LastActivity         time.Time                `json:"LastActivity"`
 	ExecutionStatus      ExecutionStatus          `json:"ExecutionStatus"`
-	CompletedCheckpoints []CheckpointCompletition `json:"CompletedCheckpoints" gorm:"foreignKey:TourExecutionId"` //
+	CompletedCheckpoints []CheckpointCompletition `json:"CompletedCheckpoints" gorm:"foreignKey:TourExecutionId"`
 	// Changes              []abstractions.DomainEvent `json:"-" gorm:"type:jsonb"`
 	// Version              int64                      `json:"-"`
 }

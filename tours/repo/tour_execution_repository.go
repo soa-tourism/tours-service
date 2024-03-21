@@ -12,7 +12,7 @@ type TourExecutionRepository struct {
 
 func (repo *TourExecutionRepository) FindAll() ([]model.TourExecution, error) {
 	var TourExecutions []model.TourExecution
-	dbResult := repo.DB.Preload("Tour").Find(&TourExecutions)
+	dbResult := repo.DB.Find(&TourExecutions)
 	if dbResult.Error != nil {
 		return nil, dbResult.Error
 	}
@@ -21,7 +21,7 @@ func (repo *TourExecutionRepository) FindAll() ([]model.TourExecution, error) {
 
 func (repo *TourExecutionRepository) FindById(id int64) (model.TourExecution, error) {
 	TourExecution := model.TourExecution{}
-	dbResult := repo.DB.Preload("Tour").First(&TourExecution, "id = ?", id)
+	dbResult := repo.DB.First(&TourExecution, "id = ?", id)
 	if dbResult.Error != nil {
 		return TourExecution, dbResult.Error
 	}

@@ -7,13 +7,12 @@ import (
 )
 
 type TourExecutionDto struct {
-	Id                   int64 `gorm:"primaryKey"`
-	TouristId            int64 `json:"TouristId"`
-	TourId               int64 `json:"TourId"`
-	Tour                 model.Tour
+	Id                   int64                          `gorm:"primaryKey"`
+	TouristId            int64                          `json:"TouristId"`
+	TourId               int64                          `json:"TourId"`
 	Start                time.Time                      `json:"Start"`
 	LastActivity         time.Time                      `json:"LastActivity"`
-	ExecutionStatus      model.ExecutionStatus          `json:"ExecutionStatus"`
+	ExecutionStatus      string                         `json:"ExecutionStatus"`
 	CompletedCheckpoints []model.CheckpointCompletition `json:"CompletedCheckpoints"`
 }
 
@@ -34,14 +33,14 @@ func (dto *TourExecutionDto) MapToModel() *model.TourExecution {
 		TourId:               dto.TourId,
 		Start:                dto.Start,
 		LastActivity:         dto.LastActivity,
-		ExecutionStatus:      model.ParseExecutionStatus(dto.ExecutionStatus.String()),
+		ExecutionStatus:      model.ParseExecutionStatus(dto.ExecutionStatus),
 		CompletedCheckpoints: completedCheckpoints,
 	}
 }
 
-func CheckpointCompletitionFromModel(dto model.TourExecution) TourExecutionDto {
-	completedCheckpoints := make([]model.CheckpointCompletition, len(dto.CompletedCheckpoints))
-	for i, checkpoint := range dto.CompletedCheckpoints {
+func TourExecutionDtoFromModel(execution model.TourExecution) TourExecutionDto {
+	completedCheckpoints := make([]model.CheckpointCompletition, len(execution.CompletedCheckpoints))
+	for i, checkpoint := range execution.CompletedCheckpoints {
 		completedCheckpoints[i] = model.CheckpointCompletition{
 			Id:               checkpoint.Id,
 			TourExecutionId:  checkpoint.TourExecutionId,
@@ -51,12 +50,12 @@ func CheckpointCompletitionFromModel(dto model.TourExecution) TourExecutionDto {
 	}
 
 	return TourExecutionDto{
-		Id:                   dto.Id,
-		TouristId:            dto.TouristId,
-		TourId:               dto.TourId,
-		Start:                dto.Start,
-		LastActivity:         dto.LastActivity,
-		ExecutionStatus:      dto.ExecutionStatus,
+		Id:                   execution.Id,
+		TouristId:            execution.TouristId,
+		TourId:               execution.TourId,
+		Start:                execution.Start,
+		LastActivity:         execution.LastActivity,
+		ExecutionStatus:      execution.ExecutionStatus.String(),
 		CompletedCheckpoints: completedCheckpoints,
 	}
 }

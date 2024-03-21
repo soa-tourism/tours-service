@@ -18,11 +18,19 @@ func (d ExecutionStatus) String() string {
 	return ExecutionStatusStrings[d]
 }
 
-func ParseExecutionStatus(ExecutionStatusStr string) ExecutionStatus {
-	for diff, diffStr := range ExecutionStatusStrings {
-		if diffStr == ExecutionStatusStr {
-			return diff
-		}
+func ParseExecutionStatus(status string) ExecutionStatus {
+	var result ExecutionStatus
+	if status == "2" || status == "InProgress" {
+		result = InProgress
+		return result
 	}
-	return Completed
+	if status == "1" || status == "Abandoned" {
+		result = Abandoned
+		return result
+	}
+	if status == "0" || status == "Completed" {
+		result = Completed
+		return result
+	}
+	return InProgress
 }
