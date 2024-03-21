@@ -1,6 +1,7 @@
 package repo
 
 import (
+	"database/sql"
 	"tours/model"
 
 	"gorm.io/gorm"
@@ -31,6 +32,15 @@ func (repo *TourReviewRepository) FindAllByAuthor(id int64) ([]model.TourReview,
 	return tourReviews, nil
 }
 
+func (repo *TourReviewRepository) FindAllByTour(id int64) ([]model.TourReview, error) {
+	var tourReviews []model.TourReview
+	dbResult := repo.DB.Where("tour_id = ?", id).Find(&tourReviews)
+	if dbResult.Error != nil {
+		return nil, dbResult.Error
+	}
+	return tourReviews, nil
+}
+
 func (repo *TourReviewRepository) FindById(id int64) (*model.TourReview, error) {
 	tourReview := model.TourReview{}
 	dbResult := repo.DB.First(&tourReview, id)
@@ -48,10 +58,19 @@ func (repo *TourReviewRepository) Create(tourReview *model.TourReview) (model.To
 	return *tourReview, nil
 }
 
-func (repo *TourReviewRepository) Update(tourReview *model.TourReview) (model.TourReview, error) {
-	dbResult := repo.DB.Save(tourReview)
+func (repo *TourReviewRepository) GetAverageRating(id int64) (float64, error) {
+	var averageRating sql.NullFloat64
+	dbResult := repo.DB.Table("tour_reviews").
+		Select("AVG(rating) AS average_rating").
+		Where("tour_id = ?", id).
+		Scan(&averageRating)
 	if dbResult.Error != nil {
-		return model.TourReview{}, dbResult.Error
+		return 0, dbResult.Error
 	}
-	return *tourReview, nil
+
+	if averageRating.Valid {
+		return averageRating.Float64, nil
+	}
+
+	return 0, nil
 }

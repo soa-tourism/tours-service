@@ -49,6 +49,24 @@ func (handler *TourReviewHandler) GetAllByAuthor(writer http.ResponseWriter, req
 	}
 }
 
+func (handler *TourReviewHandler) GetAllByTour(writer http.ResponseWriter, req *http.Request) {
+	idStr := mux.Vars(req)["id"]
+	id, err := strconv.ParseInt(idStr, 10, 64)
+
+	tourReview, err := handler.TourReviewService.FindAllTourReviewsByTour(id)
+	writer.Header().Set("Content-Type", "application/json")
+	if err != nil {
+		writer.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	err = json.NewEncoder(writer).Encode(tourReview)
+	if err != nil {
+		writer.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+}
+
 func (handler *TourReviewHandler) Get(writer http.ResponseWriter, req *http.Request) {
 	idStr := mux.Vars(req)["id"]
 	id, err := strconv.ParseInt(idStr, 10, 64)
@@ -98,4 +116,22 @@ func (handler *TourReviewHandler) Create(writer http.ResponseWriter, req *http.R
 
 	writer.WriteHeader(http.StatusCreated)
 	writer.Header().Set("Content-Type", "application/json")
+}
+
+func (handler *TourReviewHandler) GetAverageRating(writer http.ResponseWriter, req *http.Request) {
+	idStr := mux.Vars(req)["id"]
+	id, err := strconv.ParseInt(idStr, 10, 64)
+
+	rating, err := handler.TourReviewService.FindAverageRating(id)
+	writer.Header().Set("Content-Type", "application/json")
+	if err != nil {
+		writer.WriteHeader(http.StatusNotFound)
+		return
+	}
+
+	err = json.NewEncoder(writer).Encode(rating)
+	if err != nil {
+		writer.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 }
