@@ -3,18 +3,18 @@ package dto
 import "tours/model"
 
 type CheckpointDto struct {
-	Id                    int64    `json:"Id"`
-	TourId                int64    `json:"TourId"`
-	AuthorId              int64    `json:"AuthorId"`
-	Longitude             float64  `json:"Longitude"`
-	Latitude              float64  `json:"Latitude"`
-	Name                  string   `json:"Name"`
-	Description           string   `json:"Description"`
-	Pictures              []string `json:"Pictures" gorm:"type:text[]"`
-	RequiredTimeInSeconds float64  `json:"RequiredTimeInSeconds"`
-	IsSecretPrerequisite  bool     `json:"IsSecretPrerequisite"`
-	EncounterId           int64    `json:"EncounterId"`
-	//CheckpointSecret      model.CheckpointSecret `json:"CheckpointSecret"`
+	Id                    int64                  `json:"Id"`
+	TourId                int64                  `json:"TourId"`
+	AuthorId              int64                  `json:"AuthorId"`
+	Longitude             float64                `json:"Longitude"`
+	Latitude              float64                `json:"Latitude"`
+	Name                  string                 `json:"Name"`
+	Description           string                 `json:"Description"`
+	Pictures              []string               `json:"Pictures"`
+	RequiredTimeInSeconds float64                `json:"RequiredTimeInSeconds"`
+	IsSecretPrerequisite  bool                   `json:"IsSecretPrerequisite"`
+	EncounterId           int64                  `json:"EncounterId"`
+	CheckpointSecret      model.CheckpointSecret `json:"CheckpointSecret"`
 }
 
 func (dto *CheckpointDto) MapToModel() *model.Checkpoint {
@@ -30,7 +30,7 @@ func (dto *CheckpointDto) MapToModel() *model.Checkpoint {
 		RequiredTimeInSeconds: dto.RequiredTimeInSeconds,
 		IsSecretPrerequisite:  dto.IsSecretPrerequisite,
 		EncounterId:           dto.EncounterId,
-		//CheckpointSecret:      dto.CheckpointSecret,
+		CheckpointSecret:      dto.CheckpointSecret,
 	}
 }
 
@@ -47,6 +47,6 @@ func CheckpointDtoFromModel(ch model.Checkpoint) CheckpointDto {
 		RequiredTimeInSeconds: ch.RequiredTimeInSeconds,
 		IsSecretPrerequisite:  ch.IsSecretPrerequisite,
 		EncounterId:           ch.EncounterId,
-		// CheckpointSecret:      ch.CheckpointSecret,
+		CheckpointSecret:      ch.CheckpointSecret,
 	}
 }

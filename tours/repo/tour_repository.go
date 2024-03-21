@@ -21,7 +21,7 @@ func (repo *TourRepository) FindAll() ([]model.Tour, error) {
 
 func (repo *TourRepository) FindById(id int64) (*model.Tour, error) {
 	tour := model.Tour{}
-	dbResult := repo.DB.Preload("Equipment").First(&tour, id)
+	dbResult := repo.DB.Preload("Equipment").Preload("Checkpoints").First(&tour, id)
 	if dbResult.Error != nil {
 		return &tour, dbResult.Error
 	}
@@ -38,6 +38,7 @@ func (repo *TourRepository) Create(tour *model.Tour) (model.Tour, error) {
 
 func (repo *TourRepository) Update(tour *model.Tour) (model.Tour, error) {
 	tour.Equipment = nil
+	tour.Checkpoints = nil
 	dbResult := repo.DB.Save(tour)
 	if dbResult.Error != nil {
 		return model.Tour{}, dbResult.Error

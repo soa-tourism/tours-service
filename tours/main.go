@@ -29,6 +29,9 @@ func initDB() *gorm.DB {
 		&model.Checkpoint{},
 		&model.TourReview{},
 		&model.Tour{},
+		&model.TouristPosition{},
+		&model.TourExecution{},
+		&model.CheckpointCompletition{},
 	)
 	if err != nil {
 		log.Fatalf("Error migrating models: %v", err)
@@ -45,6 +48,8 @@ func startServer(database *gorm.DB) {
 	imageHandler := handler.NewImageHandler()
 	publicCheckpointHandler := initPublicCheckpoint(database)
 	checkpointHandler := initCheckpoint(database)
+	touristPositionHandler := initTouristPosition(database)
+	tourExecutionHandler := initTourExecution(database)
 
 	router := mux.NewRouter().StrictSlash(true)
 
@@ -55,6 +60,8 @@ func startServer(database *gorm.DB) {
 	initTourReviewHandler(tourReviewHandler, router)
 	initTourHandler(tourHandler, router)
 	initImageHandler(imageHandler, router)
+	initTouristPositionHandler(touristPositionHandler, router)
+	initTourExecutionHandler(tourExecutionHandler, router)
 
 	println("Server starting...")
 	log.Fatal(http.ListenAndServe(":8081", router))
@@ -104,22 +111,44 @@ func initImageHandler(imageHandler *handler.ImageHandler, router *mux.Router) {
 }
 
 func initPublicCheckpointHandler(publicCheckpointHandler *handler.PublicCheckpointHandler, router *mux.Router) {
-	v1 := router.PathPrefix("/v1/tours").Subrouter()
-	v1.HandleFunc("/publicCheckpoint", publicCheckpointHandler.GetAll).Methods("GET")
-	v1.HandleFunc("/publicCheckpoint/details/{id}", publicCheckpointHandler.Get).Methods("GET")
-	v1.HandleFunc("/publicCheckpoint", publicCheckpointHandler.Create).Methods("POST")
-	v1.HandleFunc("/publicCheckpoint/{id}", publicCheckpointHandler.Update).Methods("PUT")
-	v1.HandleFunc("/publicCheckpoint/{id}", publicCheckpointHandler.Delete).Methods("DELETE")
+	v1 := router.PathPrefix("/v1/publicCheckpoint").Subrouter()
+	v1.HandleFunc("", publicCheckpointHandler.GetAll).Methods("GET")
+	v1.HandleFunc("/details/{id}", publicCheckpointHandler.Get).Methods("GET")
+	v1.HandleFunc("", publicCheckpointHandler.Create).Methods("POST")
+	v1.HandleFunc("/{id}", publicCheckpointHandler.Update).Methods("PUT")
+	v1.HandleFunc("/{id}", publicCheckpointHandler.Delete).Methods("DELETE")
 }
 
 func initCheckpointHandler(checkpointHandler *handler.CheckpointHandler, router *mux.Router) {
-	v1 := router.PathPrefix("/v1/tours").Subrouter()
-	v1.HandleFunc("/checkpoint", checkpointHandler.GetAll).Methods("GET")
-	v1.HandleFunc("/checkpoint/details/{id}", checkpointHandler.Get).Methods("GET")
-	v1.HandleFunc("/checkpoint", checkpointHandler.Create).Methods("POST")
-	v1.HandleFunc("/checkpoint/{id}", checkpointHandler.Update).Methods("PUT")
-	v1.HandleFunc("/checkpoint/{id}", checkpointHandler.Delete).Methods("DELETE")
-	v1.HandleFunc("/checkpoint/{id}", checkpointHandler.GetByTour).Methods("GET")
+	v1 := router.PathPrefix("/v1/checkpoint").Subrouter()
+	v1.HandleFunc("/", checkpointHandler.GetAll).Methods("GET")
+	v1.HandleFunc("/details/{id}", checkpointHandler.Get).Methods("GET")
+	v1.HandleFunc("", checkpointHandler.Create).Methods("POST")
+	v1.HandleFunc("/{id}", checkpointHandler.Update).Methods("PUT")
+	v1.HandleFunc("/{id}", checkpointHandler.Delete).Methods("DELETE")
+	v1.HandleFunc("/{id}", checkpointHandler.GetByTour).Methods("GET")
+	v1.HandleFunc("/createSecret/{id}", checkpointHandler.UpdateCheckpointSecret).Methods("PUT")
+	v1.HandleFunc("/encounter/{checkpointId}/{encounterId}/{isSecretPrerequisite}", checkpointHandler.UpdateCheckpointEncounter).Methods("PUT")
+}
+
+func initTouristPositionHandler(touristPositionHandler *handler.TouristPositionHandler, router *mux.Router) {
+	v1 := router.PathPrefix("/v1/position").Subrouter()
+	v1.HandleFunc("", touristPositionHandler.GetAll).Methods("GET")
+	v1.HandleFunc("/{id}", touristPositionHandler.Get).Methods("GET")
+	v1.HandleFunc("", touristPositionHandler.Create).Methods("POST")
+	v1.HandleFunc("/{id}", touristPositionHandler.Update).Methods("PUT")
+	v1.HandleFunc("/{id}", touristPositionHandler.Delete).Methods("DELETE")
+}
+
+func initTourExecutionHandler(tourExecutionHandler *handler.TourExecutionHandler, router *mux.Router) {
+	v1 := router.PathPrefix("/v1/execution").Subrouter()
+	v1.HandleFunc("", tourExecutionHandler.GetAll).Methods("GET")
+	v1.HandleFunc("/{id}", tourExecutionHandler.Get).Methods("GET")
+	v1.HandleFunc("", tourExecutionHandler.Create).Methods("POST")
+	v1.HandleFunc("/{id}", tourExecutionHandler.Update).Methods("PUT")
+	v1.HandleFunc("/{id}", tourExecutionHandler.Delete).Methods("DELETE")
+	v1.HandleFunc("/all/{tourId}/{touristId}", tourExecutionHandler.GetByTouristAndTour).Methods("GET")
+	v1.HandleFunc("/{tourId}/{touristId}", tourExecutionHandler.GetActiveByTouristAndTour).Methods("GET")
 }
 
 func main() {
@@ -176,4 +205,19 @@ func initCheckpoint(database *gorm.DB) *handler.CheckpointHandler {
 	checkpointService := &service.CheckpointService{CheckpointRepo: checkpointRepo}
 	checkpointHandler := &handler.CheckpointHandler{CheckpointService: checkpointService}
 	return checkpointHandler
+}
+
+func initTouristPosition(database *gorm.DB) *handler.TouristPositionHandler {
+	touristPositionRepo := &repo.TouristPositionRepository{DB: database}
+	touristPositionService := &service.TouristPositionService{TouristPositionRepo: touristPositionRepo}
+	touristPositionHandler := &handler.TouristPositionHandler{TouristPositionService: touristPositionService}
+	return touristPositionHandler
+}
+
+func initTourExecution(database *gorm.DB) *handler.TourExecutionHandler {
+	tourExecutionRepo := &repo.TourExecutionRepository{DB: database}
+	tourExecutionService := &service.TourExecutionService{TourExecutionRepo: tourExecutionRepo}
+	tourExecutionHandler := &handler.TourExecutionHandler{TourExecutionService: tourExecutionService}
+
+	return tourExecutionHandler
 }

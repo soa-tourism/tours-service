@@ -3,15 +3,16 @@ package dto
 import "tours/model"
 
 type TourDto struct {
-	Id          int64             `json:"Id"`
-	AuthorId    int64             `json:"AuthorId"`
-	Name        string            `json:"Name"`
-	Description string            `json:"Description"`
-	Difficulty  string            `json:"Difficulty"`
-	Status      string            `json:"Status"`
-	Price       float64           `json:"Price"`
-	Tags        []string          `json:"Tags"`
-	Equipment   []model.Equipment `json:"Equipment"`
+	Id          int64              `json:"Id"`
+	AuthorId    int64              `json:"AuthorId"`
+	Name        string             `json:"Name"`
+	Description string             `json:"Description"`
+	Difficulty  string             `json:"Difficulty"`
+	Status      string             `json:"Status"`
+	Price       float64            `json:"Price"`
+	Tags        []string           `json:"Tags"`
+	Equipment   []model.Equipment  `json:"Equipment"`
+	Checkpoints []model.Checkpoint `json:"Checkpoints"`
 }
 
 func (dto *TourDto) MapToModel() *model.Tour {
@@ -21,6 +22,24 @@ func (dto *TourDto) MapToModel() *model.Tour {
 			Id:          equip.Id,
 			Name:        equip.Name,
 			Description: equip.Description,
+		}
+	}
+
+	checkpoints := make([]model.Checkpoint, len(dto.Checkpoints))
+	for i, ch := range dto.Checkpoints {
+		checkpoints[i] = model.Checkpoint{
+			Id:                    ch.Id,
+			TourId:                ch.TourId,
+			AuthorId:              ch.AuthorId,
+			Longitude:             ch.Longitude,
+			Latitude:              ch.Latitude,
+			Name:                  ch.Name,
+			Description:           ch.Description,
+			Pictures:              ch.Pictures,
+			RequiredTimeInSeconds: ch.RequiredTimeInSeconds,
+			IsSecretPrerequisite:  ch.IsSecretPrerequisite,
+			EncounterId:           ch.EncounterId,
+			CheckpointSecret:      ch.CheckpointSecret,
 		}
 	}
 
@@ -34,6 +53,7 @@ func (dto *TourDto) MapToModel() *model.Tour {
 		Price:       dto.Price,
 		Tags:        dto.Tags,
 		Equipment:   equipment,
+		Checkpoints: checkpoints,
 	}
 }
 
@@ -48,5 +68,6 @@ func MapFromTour(tour model.Tour) TourDto {
 		Price:       tour.Price,
 		Tags:        tour.Tags,
 		Equipment:   tour.Equipment,
+		Checkpoints: tour.Checkpoints,
 	}
 }

@@ -57,3 +57,18 @@ func (service *CheckpointService) FindCheckpointsByTour(id int64) ([]model.Check
 	}
 	return checkpoints, nil
 }
+
+func (service *CheckpointService) UpdateCheckpointSecret(id int64, secret *model.CheckpointSecret) (*model.Checkpoint, error) {
+	checkpoint1, err := service.CheckpointRepo.FindById(id)
+	if err != nil {
+		return nil, fmt.Errorf(" checkpoint with ID %d not found", id)
+	}
+
+	checkpoint1.UpdateCheckpointSecret(secret.Description, secret.Pictures)
+
+	updatedCheckpoint, err := service.CheckpointRepo.Update(&checkpoint1)
+	if err != nil {
+		return nil, fmt.Errorf("failed to update checkpoint: %v", err)
+	}
+	return &updatedCheckpoint, nil
+}

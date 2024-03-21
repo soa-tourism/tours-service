@@ -2,6 +2,7 @@ package handler
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strconv"
 	"tours/dto"
@@ -154,4 +155,83 @@ func (handler *CheckpointHandler) GetByTour(writer http.ResponseWriter, req *htt
 		writer.WriteHeader(http.StatusInternalServerError)
 		return
 	}
+}
+
+func (handler *CheckpointHandler) UpdateCheckpointSecret(writer http.ResponseWriter, req *http.Request) {
+	idStr := mux.Vars(req)["id"]
+	id, err := strconv.ParseInt(idStr, 10, 64)
+	if err != nil {
+		writer.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	var secretDto dto.CheckpointSecretDto
+	err = json.NewDecoder(req.Body).Decode(&secretDto)
+	if err != nil {
+		writer.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	secret, _ := secretDto.MapToModel()
+	checkpointDto, err := handler.CheckpointService.UpdateCheckpointSecret(id, secret)
+	if err != nil {
+		writer.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	err = json.NewEncoder(writer).Encode(checkpointDto)
+	if err != nil {
+		writer.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	writer.WriteHeader(http.StatusOK)
+	writer.Header().Set("Content-Type", "application/json")
+}
+func (handler *CheckpointHandler) UpdateCheckpointEncounter(writer http.ResponseWriter, req *http.Request) {
+	// Parse request params
+	vars := mux.Vars(req)
+	checkpointID := vars["checkpointId"]
+	id, err := strconv.ParseInt(checkpointID, 10, 64)
+	if err != nil {
+		fmt.Println("Error parsing checkpointId:", err)
+		writer.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	encounterID := vars["encounterId"]
+	encounterId, err := strconv.ParseInt(encounterID, 10, 64)
+	if err != nil {
+		fmt.Println("Error parsing encounterId:", err)
+		writer.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	isSecretPrerequisite := vars["isSecretPrerequisite"]
+	isSecretBool, err := strconv.ParseBool(isSecretPrerequisite)
+	if err != nil {
+		fmt.Println("Error parsing boolean:", err)
+		writer.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	// Get checkpoint by id
+	checkpoint, err := handler.CheckpointService.FindCheckpoint(id)
+	writer.Header().Set("Content-Type", "application/json")
+	if err != nil {
+		fmt.Println("Can't find checkpoint with id:", id, err)
+		writer.WriteHeader(http.StatusNotFound)
+		return
+	}
+	checkpoint.Id = id
+	checkpoint.EncounterId = encounterId
+	checkpoint.IsSecretPrerequisite = isSecretBool
+	// Update checkpoint
+	updatedCheckpoint, err := handler.CheckpointService.UpdateCheckpoint(checkpoint)
+	if err != nil {
+		writer.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	updatedCheckpoint.Id = id
+
+	writer.WriteHeader(http.StatusOK)
+	writer.Header().Set("Content-Type", "application/json")
+	writer.Write([]byte(`{"message": "Checkpoint updated with encounter"}`))
 }

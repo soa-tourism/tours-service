@@ -2,6 +2,7 @@ package model
 
 import (
 	"errors"
+
 	"github.com/google/uuid"
 	"github.com/lib/pq"
 	"gorm.io/gorm"
@@ -17,6 +18,7 @@ type Tour struct {
 	Price       float64        `json:"Price"`
 	Tags        pq.StringArray `json:"Tags" gorm:"type:text[]"`
 	Equipment   []Equipment    `json:"Equipment" gorm:"many2many:tour_equipments"`
+	Checkpoints []Checkpoint   `json:"Checkpoints" gorm:"foreignKey:TourId"`
 }
 
 func (t *Tour) BeforeCreate(scope *gorm.DB) error {
@@ -26,6 +28,10 @@ func (t *Tour) BeforeCreate(scope *gorm.DB) error {
 
 	if t.Equipment == nil {
 		t.Equipment = []Equipment{}
+	}
+
+	if t.Checkpoints == nil {
+		t.Checkpoints = []Checkpoint{}
 	}
 
 	uid := uuid.New()
