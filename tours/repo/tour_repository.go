@@ -62,6 +62,15 @@ func (repo *TourRepository) FindByAuthor(id int64) ([]model.Tour, error) {
 	return tours, nil
 }
 
+func (repo *TourRepository) FindAllPublished() ([]model.Tour, error) {
+	var tours []model.Tour
+	dbResult := repo.DB.Where("status = ?", model.Published).Find(&tours)
+	if dbResult.Error != nil {
+		return nil, dbResult.Error
+	}
+	return tours, nil
+}
+
 func (repo *TourRepository) AddEquipment(tourId int64, equipmentId int64) error {
 	if err := repo.DB.Create(
 		&model.TourEquipment{

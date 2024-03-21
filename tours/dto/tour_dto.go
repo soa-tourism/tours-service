@@ -37,7 +37,7 @@ func (dto *TourDto) MapToModel() *model.Tour {
 	}
 }
 
-func MapFromModel(tour model.Tour) TourDto {
+func MapFromTour(tour model.Tour) TourDto {
 	return TourDto{
 		Id:          tour.Id,
 		AuthorId:    tour.AuthorId,
