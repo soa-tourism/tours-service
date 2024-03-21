@@ -49,3 +49,19 @@ func (service *TourExecutionService) DeleteTourExecution(id int64) error {
 	}
 	return nil
 }
+
+func (service *TourExecutionService) FindByTouristAndTour(tourId, touristId int64) ([]model.TourExecution, error) {
+	executions, err := service.TourExecutionRepo.FindByTouristAndTour(tourId, touristId)
+	if err != nil {
+		return nil, fmt.Errorf("failed to retrieve tour execution: %v", err)
+	}
+	return executions, nil
+}
+
+func (service *TourExecutionService) FindActiveByTouristAndTour(tourId, touristId int64) (model.TourExecution, error) {
+	execution, err := service.TourExecutionRepo.FindActiveByTouristAndTour(tourId, touristId)
+	if err != nil {
+		return model.TourExecution{}, fmt.Errorf("failed to retrieve active tour execution: %v", err)
+	}
+	return execution, nil
+}

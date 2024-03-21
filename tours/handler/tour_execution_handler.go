@@ -129,3 +129,64 @@ func (handler *TourExecutionHandler) Delete(writer http.ResponseWriter, req *htt
 	}
 	writer.WriteHeader(http.StatusOK)
 }
+
+func (handler *TourExecutionHandler) GetByTouristAndTour(writer http.ResponseWriter, req *http.Request) {
+	tourIdStr := mux.Vars(req)["tourId"]
+	touristIdStr := mux.Vars(req)["touristId"]
+	tourId, err := strconv.ParseInt(tourIdStr, 10, 64)
+	if err != nil {
+		writer.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	touristId, err := strconv.ParseInt(touristIdStr, 10, 64)
+	if err != nil {
+		writer.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	executions, err := handler.TourExecutionService.FindByTouristAndTour(tourId, touristId)
+	writer.Header().Set("Content-Type", "application/json")
+	if err != nil {
+		writer.WriteHeader(http.StatusNotFound)
+		return
+	}
+
+	executionDtos := make([]dto.TourExecutionDto, len(executions))
+	for i, tour := range executions {
+		executionDtos[i] = dto.TourExecutionDtoFromModel(tour)
+	}
+
+	err = json.NewEncoder(writer).Encode(executionDtos)
+	if err != nil {
+		writer.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+}
+
+func (handler *TourExecutionHandler) GetActiveByTouristAndTour(writer http.ResponseWriter, req *http.Request) {
+	tourIdStr := mux.Vars(req)["tourId"]
+	touristIdStr := mux.Vars(req)["touristId"]
+	tourId, err := strconv.ParseInt(tourIdStr, 10, 64)
+	if err != nil {
+		writer.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	touristId, err := strconv.ParseInt(touristIdStr, 10, 64)
+	if err != nil {
+		writer.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	execution, err := handler.TourExecutionService.FindActiveByTouristAndTour(tourId, touristId)
+	writer.Header().Set("Content-Type", "application/json")
+	if err != nil {
+		writer.WriteHeader(http.StatusNotFound)
+		return
+	}
+
+	err = json.NewEncoder(writer).Encode(dto.TourExecutionDtoFromModel(execution))
+	if err != nil {
+		writer.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+}

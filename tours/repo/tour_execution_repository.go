@@ -21,7 +21,7 @@ func (repo *TourExecutionRepository) FindAll() ([]model.TourExecution, error) {
 
 func (repo *TourExecutionRepository) FindById(id int64) (model.TourExecution, error) {
 	TourExecution := model.TourExecution{}
-	dbResult := repo.DB.First(&TourExecution, "id = ?", id)
+	dbResult := repo.DB.Preload("CompletedCheckpoints").First(&TourExecution, "id = ?", id)
 	if dbResult.Error != nil {
 		return TourExecution, dbResult.Error
 	}
@@ -52,17 +52,24 @@ func (repo *TourExecutionRepository) Delete(id int64) error {
 	return nil
 }
 
-//// TODO
-// func (repo *TourExecutionRepository) FindByTouristAndTour(tourId, touristId int64) (model.TourExecution, error) {
-// 	var exactTourExecution model.TourExecution
-// 	dbResult := repo.DB.Preload("CompletedCheckpoints").
-// 		Preload("Tour", func(db *gorm.DB) *gorm.DB {
-// 			return db.Preload("Checkpoints")
-// 		}).
-// 		Where("tour_id = ? AND tourist_id = ?", tourId, touristId).
-// 		First(&exactTourExecution)
-// 	if dbResult.Error != nil {
-// 		return model.TourExecution{}, dbResult.Error
-// 	}
-// 	return exactTourExecution, nil
-// }
+func (repo *TourExecutionRepository) FindByTouristAndTour(tourId, touristId int64) ([]model.TourExecution, error) {
+	var executions []model.TourExecution
+	dbResult := repo.DB.Preload("CompletedCheckpoints").
+		Where("tour_id = ? AND tourist_id = ?", tourId, touristId).
+		Find(&executions)
+	if dbResult.Error != nil {
+		return nil, dbResult.Error
+	}
+	return executions, nil
+}
+
+func (repo *TourExecutionRepository) FindActiveByTouristAndTour(tourId, touristId int64) (model.TourExecution, error) {
+	var exactTourExecution model.TourExecution
+	dbResult := repo.DB.
+		Where("execution_status = 2 AND tour_id = ? AND tourist_id = ?", tourId, touristId).
+		First(&exactTourExecution)
+	if dbResult.Error != nil {
+		return model.TourExecution{}, dbResult.Error
+	}
+	return exactTourExecution, nil
+}

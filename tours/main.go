@@ -121,6 +121,8 @@ func initTourExecutionHandler(tourExecutionHandler *handler.TourExecutionHandler
 	v1.HandleFunc("", tourExecutionHandler.Create).Methods("POST")
 	v1.HandleFunc("/{id}", tourExecutionHandler.Update).Methods("PUT")
 	v1.HandleFunc("/{id}", tourExecutionHandler.Delete).Methods("DELETE")
+	v1.HandleFunc("/all/{tourId}/{touristId}", tourExecutionHandler.GetByTouristAndTour).Methods("GET")
+	v1.HandleFunc("/{tourId}/{touristId}", tourExecutionHandler.GetActiveByTouristAndTour).Methods("GET")
 }
 
 func main() {
