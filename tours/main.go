@@ -26,9 +26,9 @@ func initDB() *gorm.DB {
 	err = database.AutoMigrate(
 		&model.Equipment{},
 		&model.PublicCheckpoint{},
+		&model.Tour{},
 		&model.Checkpoint{},
 		&model.TourReview{},
-		&model.Tour{},
 		&model.TouristPosition{},
 		&model.TourExecution{},
 		&model.CheckpointCompletition{},
