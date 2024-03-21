@@ -48,13 +48,13 @@ func startServer(database *gorm.DB) {
 
 	router := mux.NewRouter().StrictSlash(true)
 
-	initImageHandler(imageHandler, router)
 	initEquipmentHandler(equipmentHandler, router)
+	initPublicCheckpointHandler(publicCheckpointHandler, router)
+	initCheckpointHandler(checkpointHandler, router)
 	initPublishedTourHandler(publishedTourHandler, router)
 	initTourReviewHandler(tourReviewHandler, router)
 	initTourHandler(tourHandler, router)
-	initPublicCheckpointHandler(publicCheckpointHandler, router)
-	initCheckpointHandler(checkpointHandler, router)
+	initImageHandler(imageHandler, router)
 
 	println("Server starting...")
 	log.Fatal(http.ListenAndServe(":8081", router))
