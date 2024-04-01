@@ -15,7 +15,7 @@ import (
 
 func initDB() *gorm.DB {
 
-	dsn := "user=postgres password=super dbname=soa-tours host=localhost port=5432 sslmode=disable"
+	dsn := "user=postgres password=super dbname=soa-tours host=tours_db port=5432 sslmode=disable"
 	database, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 
 	if err != nil {
@@ -64,7 +64,7 @@ func startServer(database *gorm.DB) {
 	initTourExecutionHandler(tourExecutionHandler, router)
 
 	println("Server starting...")
-	log.Fatal(http.ListenAndServe(":8081", router))
+	log.Fatal(http.ListenAndServe(":81", router))
 }
 
 func initEquipmentHandler(equipmentHandler *handler.EquipmentHandler, router *mux.Router) {
