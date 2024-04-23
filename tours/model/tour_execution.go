@@ -2,22 +2,20 @@ package model
 
 import (
 	"errors"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"time"
 
-	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
 type TourExecution struct {
-	Id                   int64                    `gorm:"primaryKey"`
-	TouristId            int64                    `json:"TouristId"`
-	TourId               int64                    `json:"TourId"`
+	ID                   primitive.ObjectID       `json:"Id" bson:"_id,omitempty"`
+	TouristID            int64                    `json:"TouristId"`
+	TourID               primitive.ObjectID       `json:"TourId"`
 	Start                time.Time                `json:"Start"`
 	LastActivity         time.Time                `json:"LastActivity"`
 	ExecutionStatus      ExecutionStatus          `json:"ExecutionStatus"`
-	CompletedCheckpoints []CheckpointCompletition `json:"CompletedCheckpoints" gorm:"foreignKey:TourExecutionId"`
-	// Changes              []abstractions.DomainEvent `json:"-" gorm:"type:jsonb"`
-	// Version              int64                      `json:"-"`
+	CompletedCheckpoints []CheckpointCompletition `json:"CompletedCheckpoints"`
 }
 
 func (t *TourExecution) BeforeCreate(scope *gorm.DB) error {
@@ -29,9 +27,6 @@ func (t *TourExecution) BeforeCreate(scope *gorm.DB) error {
 		t.CompletedCheckpoints = []CheckpointCompletition{}
 	}
 
-	uid := uuid.New()
-	t.Id = int64(uid.ID())
-
 	return nil
 }
 
@@ -42,5 +37,3 @@ func (execution *TourExecution) Validate() error {
 
 	return nil
 }
-
-//// TODO event-sourcing for TourExectution

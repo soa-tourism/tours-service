@@ -1,18 +1,21 @@
 package dto
 
-import "tours/model"
+import (
+	"go.mongodb.org/mongo-driver/bson/primitive"
+	"tours/model"
+)
 
 type TouristPositionDto struct {
-	Id        int64   `json:"Id"`
-	CreatorId int64   `json:"CreatorId"`
-	Longitude float64 `json:"Longitude"`
-	Latitude  float64 `json:"Latitude"`
+	Id        primitive.ObjectID `json:"Id"`
+	CreatorId int64              `json:"CreatorId"`
+	Longitude float64            `json:"Longitude"`
+	Latitude  float64            `json:"Latitude"`
 }
 
 func (dto *TouristPositionDto) MapToModel() *model.TouristPosition {
 	return &model.TouristPosition{
-		Id:        dto.Id,
-		CreatorId: dto.CreatorId,
+		ID:        dto.Id,
+		CreatorID: dto.CreatorId,
 		Longitude: dto.Longitude,
 		Latitude:  dto.Latitude,
 	}
@@ -20,8 +23,8 @@ func (dto *TouristPositionDto) MapToModel() *model.TouristPosition {
 
 func TouristPositionDtoFromModel(pos model.TouristPosition) TouristPositionDto {
 	return TouristPositionDto{
-		Id:        pos.Id,
-		CreatorId: pos.CreatorId,
+		Id:        pos.ID,
+		CreatorId: pos.CreatorID,
 		Longitude: pos.Longitude,
 		Latitude:  pos.Latitude,
 	}

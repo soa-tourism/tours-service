@@ -1,9 +1,12 @@
 package dto
 
-import "tours/model"
+import (
+	"go.mongodb.org/mongo-driver/bson/primitive"
+	"tours/model"
+)
 
 type TourDto struct {
-	Id          int64              `json:"Id"`
+	Id          primitive.ObjectID `json:"Id"`
 	AuthorId    int64              `json:"AuthorId"`
 	Name        string             `json:"Name"`
 	Description string             `json:"Description"`
@@ -19,7 +22,7 @@ func (dto *TourDto) MapToModel() *model.Tour {
 	equipment := make([]model.Equipment, len(dto.Equipment))
 	for i, equip := range dto.Equipment {
 		equipment[i] = model.Equipment{
-			Id:          equip.Id,
+			ID:          equip.ID,
 			Name:        equip.Name,
 			Description: equip.Description,
 		}
@@ -28,9 +31,9 @@ func (dto *TourDto) MapToModel() *model.Tour {
 	checkpoints := make([]model.Checkpoint, len(dto.Checkpoints))
 	for i, ch := range dto.Checkpoints {
 		checkpoints[i] = model.Checkpoint{
-			Id:                    ch.Id,
-			TourId:                ch.TourId,
-			AuthorId:              ch.AuthorId,
+			ID:                    ch.ID,
+			TourID:                ch.TourID,
+			AuthorID:              ch.AuthorID,
 			Longitude:             ch.Longitude,
 			Latitude:              ch.Latitude,
 			Name:                  ch.Name,
@@ -38,14 +41,14 @@ func (dto *TourDto) MapToModel() *model.Tour {
 			Pictures:              ch.Pictures,
 			RequiredTimeInSeconds: ch.RequiredTimeInSeconds,
 			IsSecretPrerequisite:  ch.IsSecretPrerequisite,
-			EncounterId:           ch.EncounterId,
+			EncounterID:           ch.EncounterID,
 			CheckpointSecret:      ch.CheckpointSecret,
 		}
 	}
 
 	return &model.Tour{
-		Id:          dto.Id,
-		AuthorId:    dto.AuthorId,
+		ID:          dto.Id,
+		AuthorID:    dto.AuthorId,
 		Name:        dto.Name,
 		Description: dto.Description,
 		Difficulty:  model.ParseDifficulty(dto.Difficulty),
@@ -59,8 +62,8 @@ func (dto *TourDto) MapToModel() *model.Tour {
 
 func MapFromTour(tour model.Tour) TourDto {
 	return TourDto{
-		Id:          tour.Id,
-		AuthorId:    tour.AuthorId,
+		Id:          tour.ID,
+		AuthorId:    tour.AuthorID,
 		Name:        tour.Name,
 		Description: tour.Description,
 		Difficulty:  tour.Difficulty.String(),

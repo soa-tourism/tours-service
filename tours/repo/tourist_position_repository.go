@@ -1,62 +1,91 @@
 package repo
 
 import (
+	"context"
+	"errors"
+	"fmt"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
 	"tours/model"
-
-	"gorm.io/gorm"
 )
 
 type TouristPositionRepository struct {
-	DB *gorm.DB
+	Collection *mongo.Collection
 }
 
 func (repo *TouristPositionRepository) FindAll() ([]model.TouristPosition, error) {
+	ctx := context.TODO()
+	cursor, err := repo.Collection.Find(ctx, bson.M{})
+	if err != nil {
+		return nil, err
+	}
+	defer func(cursor *mongo.Cursor, ctx context.Context) {
+		err := cursor.Close(ctx)
+		if err != nil {
+			fmt.Printf("Error closing cursor: %v\n", err)
+		}
+	}(cursor, ctx)
+
 	var positions []model.TouristPosition
-	dbResult := repo.DB.Find(&positions)
-	if dbResult.Error != nil {
-		return nil, dbResult.Error
+	if err := cursor.All(ctx, &positions); err != nil {
+		return nil, err
 	}
 	return positions, nil
 }
 
-func (repo *TouristPositionRepository) FindById(id int64) (model.TouristPosition, error) {
-	positions := model.TouristPosition{}
-	dbResult := repo.DB.First(&positions, "creator_id = ?", id)
-	if dbResult.Error != nil {
-		return positions, dbResult.Error
+func (repo *TouristPositionRepository) FindById(id primitive.ObjectID) (model.TouristPosition, error) {
+	ctx := context.TODO()
+	filter := bson.M{"_id": id}
+	var position model.TouristPosition
+	err := repo.Collection.FindOne(ctx, filter).Decode(&position)
+	if err != nil {
+		return model.TouristPosition{}, err
 	}
-	return positions, nil
+	return position, nil
 }
 
-func (repo *TouristPositionRepository) Create(positions *model.TouristPosition) (model.TouristPosition, error) {
-	dbResult := repo.DB.Create(positions)
-	if dbResult.Error != nil {
-		return model.TouristPosition{}, dbResult.Error
+func (repo *TouristPositionRepository) Create(position *model.TouristPosition) (model.TouristPosition, error) {
+	ctx := context.TODO()
+	result, err := repo.Collection.InsertOne(ctx, position)
+	if err != nil {
+		return model.TouristPosition{}, err
 	}
-	return *positions, nil
+
+	insertedID, ok := result.InsertedID.(primitive.ObjectID)
+	if !ok {
+		return model.TouristPosition{}, errors.New("failed to get inserted ID")
+	}
+	position.ID = insertedID
+
+	return *position, nil
 }
 
-func (repo *TouristPositionRepository) Update(positions *model.TouristPosition) (model.TouristPosition, error) {
-	dbResult := repo.DB.Save(positions)
-	if dbResult.Error != nil {
-		return model.TouristPosition{}, dbResult.Error
+func (repo *TouristPositionRepository) Update(position *model.TouristPosition) (model.TouristPosition, error) {
+	ctx := context.TODO()
+	filter := bson.M{"_id": position.ID}
+	update := bson.M{"$set": position}
+	_, err := repo.Collection.UpdateOne(ctx, filter, update)
+	if err != nil {
+		return model.TouristPosition{}, err
 	}
-	return *positions, nil
+	return *position, nil
 }
 
-func (repo *TouristPositionRepository) Delete(id int64) error {
-	dbResult := repo.DB.Delete(&model.TouristPosition{}, id)
-	if dbResult.Error != nil {
-		return dbResult.Error
-	}
-	return nil
+func (repo *TouristPositionRepository) Delete(id primitive.ObjectID) error {
+	ctx := context.TODO()
+	filter := bson.M{"_id": id}
+	_, err := repo.Collection.DeleteOne(ctx, filter)
+	return err
 }
 
 func (repo *TouristPositionRepository) FindByCreator(id int64) (model.TouristPosition, error) {
-	pos := model.TouristPosition{}
-	dbResult := repo.DB.First(&pos, "creator_id = ?", id)
-	if dbResult.Error != nil {
-		return pos, dbResult.Error
+	ctx := context.TODO()
+	filter := bson.M{"creatorid": id}
+	var position model.TouristPosition
+	err := repo.Collection.FindOne(ctx, filter).Decode(&position)
+	if err != nil {
+		return model.TouristPosition{}, err
 	}
-	return pos, nil
+	return position, nil
 }

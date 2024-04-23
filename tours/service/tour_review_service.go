@@ -2,6 +2,7 @@ package service
 
 import (
 	"fmt"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"tours/model"
 	"tours/repo"
 )
@@ -26,7 +27,7 @@ func (service *TourReviewService) FindAllTourReviewsByAuthor(id int64) ([]model.
 	return tourReview, nil
 }
 
-func (service *TourReviewService) FindAllTourReviewsByTour(id int64) ([]model.TourReview, error) {
+func (service *TourReviewService) FindAllTourReviewsByTour(id primitive.ObjectID) ([]model.TourReview, error) {
 	tourReview, err := service.TourReviewRepo.FindAllByTour(id)
 	if err != nil {
 		return nil, fmt.Errorf("failed to retrieve tour reviews: %v", err)
@@ -34,7 +35,7 @@ func (service *TourReviewService) FindAllTourReviewsByTour(id int64) ([]model.To
 	return tourReview, nil
 }
 
-func (service *TourReviewService) FindTourReview(id int64) (*model.TourReview, error) {
+func (service *TourReviewService) FindTourReview(id primitive.ObjectID) (*model.TourReview, error) {
 	tourReview, err := service.TourReviewRepo.FindById(id)
 	if err != nil {
 		return nil, fmt.Errorf("tour review with ID %d not found", id)
@@ -50,7 +51,7 @@ func (service *TourReviewService) CreateTourReview(tourReview *model.TourReview)
 	return &createdTourReview, nil
 }
 
-func (service *TourReviewService) FindAverageRating(id int64) (float64, error) {
+func (service *TourReviewService) FindAverageRating(id primitive.ObjectID) (float64, error) {
 	averageRating, err := service.TourReviewRepo.GetAverageRating(id)
 	if err != nil {
 		return 0, fmt.Errorf("failed to retrieve average rating: %v", err)

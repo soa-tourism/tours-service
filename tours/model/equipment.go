@@ -2,23 +2,20 @@ package model
 
 import (
 	"errors"
-	"github.com/google/uuid"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"gorm.io/gorm"
 )
 
 type Equipment struct {
-	Id          int64  `gorm:"primaryKey"`
-	Name        string `json:"Name"`
-	Description string `json:"Description"`
+	ID          primitive.ObjectID `json:"Id" bson:"_id,omitempty"`
+	Name        string             `json:"Name"`
+	Description string             `json:"Description"`
 }
 
 func (e *Equipment) BeforeCreate(scope *gorm.DB) error {
 	if err := e.Validate(); err != nil {
 		return err
 	}
-
-	uid := uuid.New()
-	e.Id = int64(uid.ID())
 
 	return nil
 }

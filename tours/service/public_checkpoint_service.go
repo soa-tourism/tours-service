@@ -2,6 +2,7 @@ package service
 
 import (
 	"fmt"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"tours/model"
 	"tours/repo"
 )
@@ -18,7 +19,7 @@ func (service *PublicCheckpointService) FindAllPublicCheckpoints() ([]model.Publ
 	return checkpoints, nil
 }
 
-func (service *PublicCheckpointService) FindPublicCheckpoint(id int64) (*model.PublicCheckpoint, error) {
+func (service *PublicCheckpointService) FindPublicCheckpoint(id primitive.ObjectID) (*model.PublicCheckpoint, error) {
 	checkpoint, err := service.CheckpointRepo.FindById(id)
 	if err != nil {
 		return nil, fmt.Errorf("public checkpoint with ID %d not found", id)
@@ -42,7 +43,7 @@ func (service *PublicCheckpointService) UpdatePublicCheckpoint(checkpoint *model
 	return &updatedCheckpoint, nil
 }
 
-func (service *PublicCheckpointService) DeletePublicCheckpoint(id int64) error {
+func (service *PublicCheckpointService) DeletePublicCheckpoint(id primitive.ObjectID) error {
 	err := service.CheckpointRepo.Delete(id)
 	if err != nil {
 		return fmt.Errorf("failed to delete public checkpoint with ID %d: %v", id, err)

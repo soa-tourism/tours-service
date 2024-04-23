@@ -3,6 +3,7 @@ package handler
 import (
 	"encoding/json"
 	"fmt"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"net/http"
 	"strconv"
 	"tours/dto"
@@ -38,7 +39,7 @@ func (handler *TourExecutionHandler) GetAll(writer http.ResponseWriter, req *htt
 
 func (handler *TourExecutionHandler) Get(writer http.ResponseWriter, req *http.Request) {
 	idStr := mux.Vars(req)["id"]
-	id, err := strconv.ParseInt(idStr, 10, 64)
+	id, err := primitive.ObjectIDFromHex(idStr)
 	if err != nil {
 		writer.WriteHeader(http.StatusBadRequest)
 		return
@@ -86,7 +87,7 @@ func (handler *TourExecutionHandler) Create(writer http.ResponseWriter, req *htt
 func (handler *TourExecutionHandler) Update(writer http.ResponseWriter, req *http.Request) {
 	params := mux.Vars(req)
 	idStr := params["id"]
-	id, err := strconv.ParseInt(idStr, 10, 64)
+	id, err := primitive.ObjectIDFromHex(idStr)
 	if err != nil {
 		writer.WriteHeader(http.StatusBadRequest)
 		return
@@ -99,7 +100,7 @@ func (handler *TourExecutionHandler) Update(writer http.ResponseWriter, req *htt
 		return
 	}
 
-	tourExecution.Id = id
+	tourExecution.ID = id
 	updatedTourExecution, err := handler.TourExecutionService.UpdateTourExecution(&tourExecution)
 	writer.Header().Set("Content-Type", "application/json")
 	if err != nil {
@@ -116,7 +117,7 @@ func (handler *TourExecutionHandler) Update(writer http.ResponseWriter, req *htt
 
 func (handler *TourExecutionHandler) Delete(writer http.ResponseWriter, req *http.Request) {
 	idStr := mux.Vars(req)["id"]
-	id, err := strconv.ParseInt(idStr, 10, 64)
+	id, err := primitive.ObjectIDFromHex(idStr)
 	if err != nil {
 		writer.WriteHeader(http.StatusBadRequest)
 		return
@@ -133,7 +134,7 @@ func (handler *TourExecutionHandler) Delete(writer http.ResponseWriter, req *htt
 func (handler *TourExecutionHandler) GetByTouristAndTour(writer http.ResponseWriter, req *http.Request) {
 	tourIdStr := mux.Vars(req)["tourId"]
 	touristIdStr := mux.Vars(req)["touristId"]
-	tourId, err := strconv.ParseInt(tourIdStr, 10, 64)
+	tourId, err := primitive.ObjectIDFromHex(tourIdStr)
 	if err != nil {
 		writer.WriteHeader(http.StatusBadRequest)
 		return
@@ -166,7 +167,7 @@ func (handler *TourExecutionHandler) GetByTouristAndTour(writer http.ResponseWri
 func (handler *TourExecutionHandler) GetActiveByTouristAndTour(writer http.ResponseWriter, req *http.Request) {
 	tourIdStr := mux.Vars(req)["tourId"]
 	touristIdStr := mux.Vars(req)["touristId"]
-	tourId, err := strconv.ParseInt(tourIdStr, 10, 64)
+	tourId, err := primitive.ObjectIDFromHex(tourIdStr)
 	if err != nil {
 		writer.WriteHeader(http.StatusBadRequest)
 		return

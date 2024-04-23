@@ -1,31 +1,32 @@
 package dto
 
 import (
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"time"
 	"tours/model"
 )
 
 type CheckpointCompletitionDto struct {
-	Id               int64     `gorm:"primaryKey"`
-	TourExecutionId  int64     `json:"TourExecutionId"`
-	CheckpointId     int64     `json:"CheckpointId"`
-	CompletitionTime time.Time `json:"CompletitionTime"`
+	Id               primitive.ObjectID `json:"Id"`
+	TourExecutionId  primitive.ObjectID `json:"TourExecutionId"`
+	CheckpointId     primitive.ObjectID `json:"CheckpointId"`
+	CompletitionTime time.Time          `json:"CompletitionTime"`
 }
 
 func (dto *CheckpointCompletitionDto) MapToModel() *model.CheckpointCompletition {
 	return &model.CheckpointCompletition{
-		Id:               dto.Id,
-		TourExecutionId:  dto.TourExecutionId,
-		CheckpointId:     dto.CheckpointId,
+		ID:               dto.Id,
+		TourExecutionID:  dto.TourExecutionId,
+		CheckpointID:     dto.CheckpointId,
 		CompletitionTime: dto.CompletitionTime,
 	}
 }
 
 func CheckpointCompletitionDtoFromModel(chCompletition model.CheckpointCompletition) CheckpointCompletitionDto {
 	return CheckpointCompletitionDto{
-		Id:               chCompletition.Id,
-		TourExecutionId:  chCompletition.TourExecutionId,
-		CheckpointId:     chCompletition.CheckpointId,
+		Id:               chCompletition.ID,
+		TourExecutionId:  chCompletition.TourExecutionID,
+		CheckpointId:     chCompletition.CheckpointID,
 		CompletitionTime: chCompletition.CompletitionTime,
 	}
 }

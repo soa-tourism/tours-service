@@ -1,15 +1,16 @@
 package dto
 
 import (
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"time"
 
 	"tours/model"
 )
 
 type TourExecutionDto struct {
-	Id                   int64                          `gorm:"primaryKey"`
+	Id                   primitive.ObjectID             `json:"Id"`
 	TouristId            int64                          `json:"TouristId"`
-	TourId               int64                          `json:"TourId"`
+	TourId               primitive.ObjectID             `json:"TourId"`
 	Start                time.Time                      `json:"Start"`
 	LastActivity         time.Time                      `json:"LastActivity"`
 	ExecutionStatus      string                         `json:"ExecutionStatus"`
@@ -20,17 +21,17 @@ func (dto *TourExecutionDto) MapToModel() *model.TourExecution {
 	completedCheckpoints := make([]model.CheckpointCompletition, len(dto.CompletedCheckpoints))
 	for i, checkpoint := range dto.CompletedCheckpoints {
 		completedCheckpoints[i] = model.CheckpointCompletition{
-			Id:               checkpoint.Id,
-			TourExecutionId:  checkpoint.TourExecutionId,
-			CheckpointId:     checkpoint.CheckpointId,
+			ID:               checkpoint.ID,
+			TourExecutionID:  checkpoint.TourExecutionID,
+			CheckpointID:     checkpoint.CheckpointID,
 			CompletitionTime: checkpoint.CompletitionTime,
 		}
 	}
 
 	return &model.TourExecution{
-		Id:                   dto.Id,
-		TouristId:            dto.TouristId,
-		TourId:               dto.TourId,
+		ID:                   dto.Id,
+		TouristID:            dto.TouristId,
+		TourID:               dto.TourId,
 		Start:                dto.Start,
 		LastActivity:         dto.LastActivity,
 		ExecutionStatus:      model.ParseExecutionStatus(dto.ExecutionStatus),
@@ -42,17 +43,17 @@ func TourExecutionDtoFromModel(execution model.TourExecution) TourExecutionDto {
 	completedCheckpoints := make([]model.CheckpointCompletition, len(execution.CompletedCheckpoints))
 	for i, checkpoint := range execution.CompletedCheckpoints {
 		completedCheckpoints[i] = model.CheckpointCompletition{
-			Id:               checkpoint.Id,
-			TourExecutionId:  checkpoint.TourExecutionId,
-			CheckpointId:     checkpoint.CheckpointId,
+			ID:               checkpoint.ID,
+			TourExecutionID:  checkpoint.TourExecutionID,
+			CheckpointID:     checkpoint.CheckpointID,
 			CompletitionTime: checkpoint.CompletitionTime,
 		}
 	}
 
 	return TourExecutionDto{
-		Id:                   execution.Id,
-		TouristId:            execution.TouristId,
-		TourId:               execution.TourId,
+		Id:                   execution.ID,
+		TouristId:            execution.TouristID,
+		TourId:               execution.TourID,
 		Start:                execution.Start,
 		LastActivity:         execution.LastActivity,
 		ExecutionStatus:      execution.ExecutionStatus.String(),

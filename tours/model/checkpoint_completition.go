@@ -1,17 +1,17 @@
 package model
 
 import (
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"time"
 
-	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
 type CheckpointCompletition struct {
-	Id               int64     `gorm:"primaryKey"`
-	TourExecutionId  int64     `json:"TourExecutionId"`
-	CheckpointId     int64     `json:"CheckpointId"`
-	CompletitionTime time.Time `json:"CompletitionTime"`
+	ID               primitive.ObjectID `json:"Id" bson:"_id,omitempty"`
+	TourExecutionID  primitive.ObjectID `json:"TourExecutionId"`
+	CheckpointID     primitive.ObjectID `json:"CheckpointId"`
+	CompletitionTime time.Time          `json:"CompletitionTime"`
 }
 
 func (chCompl *CheckpointCompletition) BeforeCreate(scope *gorm.DB) error {
@@ -19,8 +19,6 @@ func (chCompl *CheckpointCompletition) BeforeCreate(scope *gorm.DB) error {
 		return err
 	}
 
-	uid := uuid.New()
-	chCompl.Id = int64(uid.ID())
 	chCompl.CompletitionTime = time.Now().UTC()
 
 	return nil
@@ -29,12 +27,4 @@ func (chCompl *CheckpointCompletition) BeforeCreate(scope *gorm.DB) error {
 func (chCompl *CheckpointCompletition) Validate() error {
 
 	return nil
-}
-
-func NewCheckpointCompletition(tourExecutionId, checkpointId int64) *CheckpointCompletition {
-	return &CheckpointCompletition{
-		TourExecutionId:  tourExecutionId,
-		CheckpointId:     checkpointId,
-		CompletitionTime: time.Now().UTC(),
-	}
 }

@@ -2,6 +2,7 @@ package service
 
 import (
 	"fmt"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"tours/model"
 	"tours/repo"
 )
@@ -18,7 +19,7 @@ func (service *PublishedTourService) FindAll() ([]model.Tour, error) {
 	return tours, nil
 }
 
-func (service *PublishedTourService) Find(id int64) (*model.Tour, error) {
+func (service *PublishedTourService) Find(id primitive.ObjectID) (*model.Tour, error) {
 	tour, err := service.TourRepo.FindById(id)
 	if err != nil {
 		return nil, fmt.Errorf("failed to retrieve tour: %v", err)

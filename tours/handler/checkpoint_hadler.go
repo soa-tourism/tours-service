@@ -3,6 +3,7 @@ package handler
 import (
 	"encoding/json"
 	"fmt"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"net/http"
 	"strconv"
 	"tours/dto"
@@ -37,7 +38,7 @@ func (handler *CheckpointHandler) GetAll(writer http.ResponseWriter, req *http.R
 
 func (handler *CheckpointHandler) Get(writer http.ResponseWriter, req *http.Request) {
 	idStr := mux.Vars(req)["id"]
-	id, err := strconv.ParseInt(idStr, 10, 64)
+	id, err := primitive.ObjectIDFromHex(idStr)
 	if err != nil {
 		writer.WriteHeader(http.StatusBadRequest)
 		return
@@ -84,7 +85,7 @@ func (handler *CheckpointHandler) Create(writer http.ResponseWriter, req *http.R
 func (handler *CheckpointHandler) Update(writer http.ResponseWriter, req *http.Request) {
 	params := mux.Vars(req)
 	idStr := params["id"]
-	id, err := strconv.ParseInt(idStr, 10, 64)
+	id, err := primitive.ObjectIDFromHex(idStr)
 	if err != nil {
 		writer.WriteHeader(http.StatusBadRequest)
 		return
@@ -98,7 +99,7 @@ func (handler *CheckpointHandler) Update(writer http.ResponseWriter, req *http.R
 	}
 
 	checkpoint := checkpointDto.MapToModel()
-	checkpoint.Id = id
+	checkpoint.ID = id
 	updatedCheckpoint, err := handler.CheckpointService.UpdateCheckpoint(checkpoint)
 	if err != nil {
 		writer.WriteHeader(http.StatusInternalServerError)
@@ -116,7 +117,7 @@ func (handler *CheckpointHandler) Update(writer http.ResponseWriter, req *http.R
 
 func (handler *CheckpointHandler) Delete(writer http.ResponseWriter, req *http.Request) {
 	idStr := mux.Vars(req)["id"]
-	id, err := strconv.ParseInt(idStr, 10, 64)
+	id, err := primitive.ObjectIDFromHex(idStr)
 	if err != nil {
 		writer.WriteHeader(http.StatusBadRequest)
 		return
@@ -132,7 +133,7 @@ func (handler *CheckpointHandler) Delete(writer http.ResponseWriter, req *http.R
 
 func (handler *CheckpointHandler) GetByTour(writer http.ResponseWriter, req *http.Request) {
 	idStr := mux.Vars(req)["id"]
-	id, err := strconv.ParseInt(idStr, 10, 64)
+	id, err := primitive.ObjectIDFromHex(idStr)
 	if err != nil {
 		writer.WriteHeader(http.StatusBadRequest)
 		return
@@ -159,7 +160,7 @@ func (handler *CheckpointHandler) GetByTour(writer http.ResponseWriter, req *htt
 
 func (handler *CheckpointHandler) UpdateCheckpointSecret(writer http.ResponseWriter, req *http.Request) {
 	idStr := mux.Vars(req)["id"]
-	id, err := strconv.ParseInt(idStr, 10, 64)
+	id, err := primitive.ObjectIDFromHex(idStr)
 	if err != nil {
 		writer.WriteHeader(http.StatusBadRequest)
 		return
@@ -191,7 +192,7 @@ func (handler *CheckpointHandler) UpdateCheckpointEncounter(writer http.Response
 	// Parse request params
 	vars := mux.Vars(req)
 	checkpointID := vars["checkpointId"]
-	id, err := strconv.ParseInt(checkpointID, 10, 64)
+	id, err := primitive.ObjectIDFromHex(checkpointID)
 	if err != nil {
 		fmt.Println("Error parsing checkpointId:", err)
 		writer.WriteHeader(http.StatusBadRequest)
@@ -220,8 +221,8 @@ func (handler *CheckpointHandler) UpdateCheckpointEncounter(writer http.Response
 		writer.WriteHeader(http.StatusNotFound)
 		return
 	}
-	checkpoint.Id = id
-	checkpoint.EncounterId = encounterId
+	checkpoint.ID = id
+	checkpoint.EncounterID = encounterId
 	checkpoint.IsSecretPrerequisite = isSecretBool
 	// Update checkpoint
 	updatedCheckpoint, err := handler.CheckpointService.UpdateCheckpoint(checkpoint)
@@ -229,7 +230,7 @@ func (handler *CheckpointHandler) UpdateCheckpointEncounter(writer http.Response
 		writer.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	updatedCheckpoint.Id = id
+	updatedCheckpoint.ID = id
 
 	writer.WriteHeader(http.StatusOK)
 	writer.Header().Set("Content-Type", "application/json")

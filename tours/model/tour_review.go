@@ -3,30 +3,27 @@ package model
 import (
 	"database/sql/driver"
 	"errors"
-	"github.com/google/uuid"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"gorm.io/gorm"
 	"strings"
 	"time"
 )
 
 type TourReview struct {
-	Id         int64         `gorm:"primaryKey"`
-	Rating     int           `json:"Rating"`
-	Comment    string        `json:"Comment"`
-	TouristId  int64         `json:"TouristId"`
-	TourId     int64         `json:"TourId"`
-	TourDate   time.Time     `json:"TourDate"`
-	ReviewDate time.Time     `json:"ReviewDate"`
-	Images     ImageListType `json:"ImageNames" gorm:"type:text[]"`
+	ID         primitive.ObjectID `json:"Id" bson:"_id,omitempty"`
+	Rating     int                `json:"Rating"`
+	Comment    string             `json:"Comment"`
+	TouristID  int64              `json:"TouristId"`
+	TourID     primitive.ObjectID `json:"TourId"`
+	TourDate   time.Time          `json:"TourDate"`
+	ReviewDate time.Time          `json:"ReviewDate"`
+	Images     ImageListType      `json:"ImageNames"`
 }
 
 func (tr *TourReview) BeforeCreate(scope *gorm.DB) error {
 	if err := tr.Validate(); err != nil {
 		return err
 	}
-
-	uid := uuid.New()
-	tr.Id = int64(uid.ID())
 
 	return nil
 }
@@ -35,10 +32,10 @@ func (tr *TourReview) Validate() error {
 	if tr.Rating == 0 || tr.Rating > 5 {
 		return errors.New("invalid rating")
 	}
-	if tr.TouristId == 0 {
+	if tr.TouristID == 0 {
 		return errors.New("invalid tourist")
 	}
-	if tr.TourId == 0 {
+	if tr.TourID == primitive.NilObjectID {
 		return errors.New("invalid tour")
 	}
 	return nil

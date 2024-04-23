@@ -2,8 +2,8 @@ package handler
 
 import (
 	"encoding/json"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"net/http"
-	"strconv"
 	"tours/dto"
 	"tours/service"
 
@@ -36,7 +36,7 @@ func (handler *PublicCheckpointHandler) GetAll(writer http.ResponseWriter, req *
 
 func (handler *PublicCheckpointHandler) Get(writer http.ResponseWriter, req *http.Request) {
 	idStr := mux.Vars(req)["id"]
-	id, err := strconv.ParseInt(idStr, 10, 64)
+	id, err := primitive.ObjectIDFromHex(idStr)
 	if err != nil {
 		writer.WriteHeader(http.StatusBadRequest)
 		return
@@ -83,7 +83,7 @@ func (handler *PublicCheckpointHandler) Create(writer http.ResponseWriter, req *
 func (handler *PublicCheckpointHandler) Update(writer http.ResponseWriter, req *http.Request) {
 	params := mux.Vars(req)
 	idStr := params["id"]
-	id, err := strconv.ParseInt(idStr, 10, 64)
+	id, err := primitive.ObjectIDFromHex(idStr)
 	if err != nil {
 		writer.WriteHeader(http.StatusBadRequest)
 		return
@@ -97,7 +97,7 @@ func (handler *PublicCheckpointHandler) Update(writer http.ResponseWriter, req *
 	}
 
 	checkpoint := checkpointDto.MapToModel()
-	checkpoint.Id = id
+	checkpoint.ID = id
 	updatedCheckpoint, err := handler.CheckpointService.UpdatePublicCheckpoint(checkpoint)
 	if err != nil {
 		writer.WriteHeader(http.StatusInternalServerError)
@@ -115,7 +115,7 @@ func (handler *PublicCheckpointHandler) Update(writer http.ResponseWriter, req *
 
 func (handler *PublicCheckpointHandler) Delete(writer http.ResponseWriter, req *http.Request) {
 	idStr := mux.Vars(req)["id"]
-	id, err := strconv.ParseInt(idStr, 10, 64)
+	id, err := primitive.ObjectIDFromHex(idStr)
 	if err != nil {
 		writer.WriteHeader(http.StatusBadRequest)
 		return

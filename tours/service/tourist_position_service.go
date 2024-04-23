@@ -3,6 +3,7 @@ package service
 import (
 	"errors"
 	"fmt"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"tours/model"
 	"tours/repo"
 
@@ -21,7 +22,7 @@ func (service *TouristPositionService) FindAllTouristPositions() ([]model.Touris
 	return TouristPosition, nil
 }
 
-func (service *TouristPositionService) FindTouristPosition(id int64) (*model.TouristPosition, error) {
+func (service *TouristPositionService) FindTouristPosition(id primitive.ObjectID) (*model.TouristPosition, error) {
 	TouristPosition, err := service.TouristPositionRepo.FindById(id)
 	if err != nil {
 		return nil, fmt.Errorf("tourist position with ID %d not found", id)
@@ -31,13 +32,12 @@ func (service *TouristPositionService) FindTouristPosition(id int64) (*model.Tou
 
 func (service *TouristPositionService) CreateTouristPosition(touristPosition *model.TouristPosition) (*model.TouristPosition, error) {
 	// Check if tourist position for that creatorId already exists
-	existingPosition, err := service.TouristPositionRepo.FindByCreator(touristPosition.CreatorId)
+	existingPosition, err := service.TouristPositionRepo.FindByCreator(touristPosition.CreatorID)
 
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, fmt.Errorf("failed to find tourist position: %v", err)
 	}
-
-	if existingPosition.Id == 0 {
+	if existingPosition.ID == primitive.NilObjectID {
 		// Tourist position for that creator id doesn't exist -> Create
 		createdTouristPosition, err := service.TouristPositionRepo.Create(touristPosition)
 		if err != nil {
@@ -65,7 +65,7 @@ func (service *TouristPositionService) UpdateTouristPosition(TouristPosition *mo
 	return &updatedTouristPosition, nil
 }
 
-func (service *TouristPositionService) DeleteTouristPosition(id int64) error {
+func (service *TouristPositionService) DeleteTouristPosition(id primitive.ObjectID) error {
 	err := service.TouristPositionRepo.Delete(id)
 	if err != nil {
 		return fmt.Errorf("failed to delete tourist position with ID %d: %v", id, err)

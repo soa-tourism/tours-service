@@ -1,10 +1,13 @@
 package dto
 
-import "tours/model"
+import (
+	"go.mongodb.org/mongo-driver/bson/primitive"
+	"tours/model"
+)
 
 type CheckpointDto struct {
-	Id                    int64                  `json:"Id"`
-	TourId                int64                  `json:"TourId"`
+	Id                    primitive.ObjectID     `json:"Id"`
+	TourId                primitive.ObjectID     `json:"TourId"`
 	AuthorId              int64                  `json:"AuthorId"`
 	Longitude             float64                `json:"Longitude"`
 	Latitude              float64                `json:"Latitude"`
@@ -19,9 +22,9 @@ type CheckpointDto struct {
 
 func (dto *CheckpointDto) MapToModel() *model.Checkpoint {
 	return &model.Checkpoint{
-		Id:                    dto.Id,
-		TourId:                dto.TourId,
-		AuthorId:              dto.AuthorId,
+		ID:                    dto.Id,
+		TourID:                dto.TourId,
+		AuthorID:              dto.AuthorId,
 		Longitude:             dto.Longitude,
 		Latitude:              dto.Latitude,
 		Name:                  dto.Name,
@@ -29,16 +32,16 @@ func (dto *CheckpointDto) MapToModel() *model.Checkpoint {
 		Pictures:              dto.Pictures,
 		RequiredTimeInSeconds: dto.RequiredTimeInSeconds,
 		IsSecretPrerequisite:  dto.IsSecretPrerequisite,
-		EncounterId:           dto.EncounterId,
+		EncounterID:           dto.EncounterId,
 		CheckpointSecret:      dto.CheckpointSecret,
 	}
 }
 
 func CheckpointDtoFromModel(ch model.Checkpoint) CheckpointDto {
 	return CheckpointDto{
-		Id:                    ch.Id,
-		TourId:                ch.TourId,
-		AuthorId:              ch.AuthorId,
+		Id:                    ch.ID,
+		TourId:                ch.TourID,
+		AuthorId:              ch.AuthorID,
 		Longitude:             ch.Longitude,
 		Latitude:              ch.Latitude,
 		Name:                  ch.Name,
@@ -46,7 +49,7 @@ func CheckpointDtoFromModel(ch model.Checkpoint) CheckpointDto {
 		Pictures:              ch.Pictures,
 		RequiredTimeInSeconds: ch.RequiredTimeInSeconds,
 		IsSecretPrerequisite:  ch.IsSecretPrerequisite,
-		EncounterId:           ch.EncounterId,
+		EncounterId:           ch.EncounterID,
 		CheckpointSecret:      ch.CheckpointSecret,
 	}
 }

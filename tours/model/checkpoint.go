@@ -2,25 +2,25 @@ package model
 
 import (
 	"errors"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 
-	"github.com/google/uuid"
 	"github.com/lib/pq"
 	"gorm.io/gorm"
 )
 
 type Checkpoint struct {
-	Id                    int64            `gorm:"primaryKey"`
-	TourId                int64            `json:"TourId"`
-	AuthorId              int64            `json:"AuthorId"`
-	Longitude             float64          `json:"Longitude"`
-	Latitude              float64          `json:"Latitude"`
-	Name                  string           `json:"Name"`
-	Description           string           `json:"Description"`
-	Pictures              pq.StringArray   `json:"Pictures" gorm:"type:text[]"`
-	RequiredTimeInSeconds float64          `json:"RequiredTimeInSeconds"`
-	IsSecretPrerequisite  bool             `json:"IsSecretPrerequisite"`
-	EncounterId           int64            `json:"EncounterId"`
-	CheckpointSecret      CheckpointSecret `json:"CheckpointSecret" gorm:"type:json"`
+	ID                    primitive.ObjectID `json:"Id" bson:"_id,omitempty"`
+	TourID                primitive.ObjectID `json:"TourId"`
+	AuthorID              int64              `json:"AuthorId"`
+	Longitude             float64            `json:"Longitude"`
+	Latitude              float64            `json:"Latitude"`
+	Name                  string             `json:"Name"`
+	Description           string             `json:"Description"`
+	Pictures              pq.StringArray     `json:"Pictures" gorm:"type:text[]"`
+	RequiredTimeInSeconds float64            `json:"RequiredTimeInSeconds"`
+	IsSecretPrerequisite  bool               `json:"IsSecretPrerequisite"`
+	EncounterID           int64              `json:"EncounterId"`
+	CheckpointSecret      CheckpointSecret   `json:"CheckpointSecret" gorm:"type:json"`
 }
 
 func (ch *Checkpoint) BeforeCreate(scope *gorm.DB) error {
@@ -28,14 +28,11 @@ func (ch *Checkpoint) BeforeCreate(scope *gorm.DB) error {
 		return err
 	}
 
-	uid := uuid.New()
-	ch.Id = int64(uid.ID())
-
 	return nil
 }
 
 func (ch *Checkpoint) Validate() error {
-	if ch.TourId == 0 {
+	if ch.TourID == primitive.NilObjectID {
 		return errors.New("invalid checkpoint tourId")
 	}
 	if ch.Longitude < 0 || ch.Longitude > 180 {
@@ -72,5 +69,5 @@ func (c *Checkpoint) DeleteCheckpointSecret() {
 }
 
 func (c *Checkpoint) IsAuthor(userId int) bool {
-	return c.AuthorId == int64(userId)
+	return c.AuthorID == int64(userId)
 }

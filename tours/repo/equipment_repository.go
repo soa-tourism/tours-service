@@ -1,72 +1,100 @@
 package repo
 
 import (
+	"context"
+	"errors"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 	"tours/model"
-
-	"gorm.io/gorm"
 )
 
 type EquipmentRepository struct {
-	DB *gorm.DB
+	Collection *mongo.Collection
 }
 
 func (repo *EquipmentRepository) FindAll() ([]model.Equipment, error) {
-	var equipments []model.Equipment
-	dbResult := repo.DB.Find(&equipments)
-	if dbResult.Error != nil {
-		return nil, dbResult.Error
+	ctx := context.TODO()
+	cursor, err := repo.Collection.Find(ctx, bson.M{})
+	if err != nil {
+		return nil, err
 	}
-	return equipments, nil
+	defer cursor.Close(ctx)
+
+	var equipment []model.Equipment
+	if err := cursor.All(ctx, &equipment); err != nil {
+		return nil, err
+	}
+	return equipment, nil
 }
 
-func (repo *EquipmentRepository) FindById(id int64) (*model.Equipment, error) {
-	equipment := model.Equipment{}
-	dbResult := repo.DB.First(&equipment, id)
-	if dbResult.Error != nil {
-		return &equipment, dbResult.Error
+func (repo *EquipmentRepository) FindById(id primitive.ObjectID) (*model.Equipment, error) {
+	ctx := context.TODO()
+	filter := bson.M{"_id": id}
+	var equipment model.Equipment
+	err := repo.Collection.FindOne(ctx, filter).Decode(&equipment)
+	if err != nil {
+		return nil, err
 	}
 	return &equipment, nil
 }
 
-func (repo *EquipmentRepository) Create(equipment *model.Equipment) (model.Equipment, error) {
-	dbResult := repo.DB.Create(equipment)
-	if dbResult.Error != nil {
-		return model.Equipment{}, dbResult.Error
-	}
-	return *equipment, nil
-}
-
-func (repo *EquipmentRepository) Update(equipment *model.Equipment) (model.Equipment, error) {
-	dbResult := repo.DB.Save(equipment)
-	if dbResult.Error != nil {
-		return model.Equipment{}, dbResult.Error
-	}
-	return *equipment, nil
-}
-
-func (repo *EquipmentRepository) Delete(id int64) error {
-	dbResult := repo.DB.Delete(&model.Equipment{}, id)
-	if dbResult.Error != nil {
-		return dbResult.Error
-	}
-	return nil
-}
-
-func (repo *EquipmentRepository) GetAvailable(ids []int64) ([]model.Equipment, error) {
-	var dbResult []model.Equipment
-
-	if len(ids) == 0 {
-		err := repo.DB.Find(&dbResult).Error
-		if err != nil {
-			return nil, err
-		}
-		return dbResult, nil
-	}
-
-	err := repo.DB.Where("id NOT IN (?)", ids).Find(&dbResult).Error
+func (repo *EquipmentRepository) Create(equipment *model.Equipment) (*model.Equipment, error) {
+	ctx := context.TODO()
+	result, err := repo.Collection.InsertOne(ctx, equipment)
 	if err != nil {
 		return nil, err
 	}
 
-	return dbResult, nil
+	insertedID, ok := result.InsertedID.(primitive.ObjectID)
+	if !ok {
+		return nil, errors.New("failed to get inserted ID")
+	}
+	equipment.ID = insertedID
+
+	return equipment, nil
+}
+
+func (repo *EquipmentRepository) Update(equipment *model.Equipment) (*model.Equipment, error) {
+	ctx := context.TODO()
+	filter := bson.M{"_id": equipment.ID}
+	update := bson.D{{"$set", equipment}}
+	_, err := repo.Collection.UpdateOne(ctx, filter, update)
+	if err != nil {
+		return nil, err
+	}
+	return equipment, nil
+}
+
+func (repo *EquipmentRepository) Delete(id primitive.ObjectID) error {
+	ctx := context.TODO()
+	filter := bson.M{"_id": id}
+	_, err := repo.Collection.DeleteOne(ctx, filter)
+	return err
+}
+
+func (repo *EquipmentRepository) GetAvailable(ids []primitive.ObjectID) ([]model.Equipment, error) {
+	ctx := context.TODO()
+
+	filter := bson.M{"_id": bson.M{"$in": ids}}
+	findOptions := options.Find()
+
+	cursor, err := repo.Collection.Find(ctx, filter, findOptions)
+	if err != nil {
+		return nil, err
+	}
+	defer func(cursor *mongo.Cursor, ctx context.Context) {
+		err := cursor.Close(ctx)
+		if err != nil {
+
+		}
+	}(cursor, ctx)
+
+	var equipment []model.Equipment
+	if err := cursor.All(ctx, &equipment); err != nil {
+		return nil, err
+	}
+
+	return equipment, nil
 }

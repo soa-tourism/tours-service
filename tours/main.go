@@ -1,53 +1,71 @@
 package main
 
 import (
+	"context"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 	"log"
 	"net/http"
 	"tours/handler"
-	"tours/model"
 	"tours/repo"
 	"tours/service"
 
 	"github.com/gorilla/mux"
-	"gorm.io/driver/postgres"
-	"gorm.io/gorm"
 )
 
-func initDB() *gorm.DB {
+func initDB() *mongo.Database {
+	//mongoURI := os.Getenv("MONGO_DB_URI")
+	mongoURI := "mongodb://root:pass@mongo:27017/"
+	clientOptions := options.Client().ApplyURI(mongoURI)
 
-	dsn := "user=postgres password=super dbname=soa-tours host=tours_db port=5432 sslmode=disable"
-	database, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
-
+	client, err := mongo.Connect(context.Background(), clientOptions)
 	if err != nil {
-		print(err)
-		return nil
+		log.Fatalf("Error connecting to MongoDB: %v", err)
 	}
 
-	err = database.AutoMigrate(
-		&model.Equipment{},
-		&model.PublicCheckpoint{},
-		&model.Tour{},
-		&model.Checkpoint{},
-		&model.TourReview{},
-		&model.TouristPosition{},
-		&model.TourExecution{},
-		&model.CheckpointCompletition{},
-	)
+	err = client.Ping(context.Background(), nil)
 	if err != nil {
-		log.Fatalf("Error migrating models: %v", err)
+		log.Fatalf("Error pinging MongoDB: %v", err)
 	}
 
-	return database
+	databaseName := "tours_db"
+	db := client.Database(databaseName)
+
+	collectionNames := []string{"tours", "equipment", "tour_reviews", "public_checkpoints", "tourist_positions", "tour_executions"}
+
+	for _, collectionName := range collectionNames {
+		if err := createCollection(db, collectionName); err != nil {
+			log.Fatalf("Error creating collection %s: %v", collectionName, err)
+		}
+	}
+	return db
 }
 
-func startServer(database *gorm.DB) {
-	equipmentHandler := initEquipment(database)
-	tourHandler := initTour(database)
+func createCollection(db *mongo.Database, collectionName string) error {
+	ctx := context.Background()
+	collectionExists, err := db.Collection(collectionName).EstimatedDocumentCount(ctx)
+	if err != nil {
+		return err
+	}
+
+	if collectionExists == 0 {
+		err := db.CreateCollection(ctx, collectionName)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func startServer(database *mongo.Database) {
+	equipmentHandler, equipmentRepo := initEquipment(database)
+	tourHandler, tourRepo := initTour(database, equipmentRepo)
 	publishedTourHandler := initPublishedTour(database)
 	tourReviewHandler := initTourReview(database)
 	imageHandler := handler.NewImageHandler()
 	publicCheckpointHandler := initPublicCheckpoint(database)
-	checkpointHandler := initCheckpoint(database)
+	checkpointHandler := initCheckpoint(database, tourRepo)
 	touristPositionHandler := initTouristPosition(database)
 	tourExecutionHandler := initTourExecution(database)
 
@@ -64,7 +82,7 @@ func startServer(database *gorm.DB) {
 	initTourExecutionHandler(tourExecutionHandler, router)
 
 	println("Server starting...")
-	log.Fatal(http.ListenAndServe(":81", router))
+	log.Fatal(http.ListenAndServe(":8083", router))
 }
 
 func initEquipmentHandler(equipmentHandler *handler.EquipmentHandler, router *mux.Router) {
@@ -161,61 +179,61 @@ func main() {
 	startServer(database)
 }
 
-func initEquipment(database *gorm.DB) *handler.EquipmentHandler {
-	equipmentRepo := &repo.EquipmentRepository{DB: database}
+func initEquipment(db *mongo.Database) (*handler.EquipmentHandler, *repo.EquipmentRepository) {
+	equipmentRepo := &repo.EquipmentRepository{Collection: db.Collection("equipment")}
 	equipmentService := &service.EquipmentService{EquipmentRepo: equipmentRepo}
 	equipmentHandler := &handler.EquipmentHandler{EquipmentService: equipmentService}
 
-	return equipmentHandler
+	return equipmentHandler, equipmentRepo
 }
 
-func initTour(database *gorm.DB) *handler.TourHandler {
-	tourRepo := &repo.TourRepository{DB: database}
-	tourService := &service.TourService{TourRepo: tourRepo}
+func initTour(db *mongo.Database, equipmentRepo *repo.EquipmentRepository) (*handler.TourHandler, *repo.TourRepository) {
+	tourRepo := &repo.TourRepository{Collection: db.Collection("tours")}
+	tourService := &service.TourService{TourRepo: tourRepo, EquipmentRepo: equipmentRepo}
 	tourHandler := &handler.TourHandler{TourService: tourService}
 
-	return tourHandler
+	return tourHandler, tourRepo
 }
 
-func initPublishedTour(database *gorm.DB) *handler.PublishedTourHandler {
-	publishedTourRepo := &repo.TourRepository{DB: database}
+func initPublishedTour(db *mongo.Database) *handler.PublishedTourHandler {
+	publishedTourRepo := &repo.TourRepository{Collection: db.Collection("published_tours")}
 	publishedTourService := &service.PublishedTourService{TourRepo: publishedTourRepo}
 	publishedTourHandler := &handler.PublishedTourHandler{PublishedTourService: publishedTourService}
 
 	return publishedTourHandler
 }
 
-func initTourReview(database *gorm.DB) *handler.TourReviewHandler {
-	tourReviewRepo := &repo.TourReviewRepository{DB: database}
+func initTourReview(db *mongo.Database) *handler.TourReviewHandler {
+	tourReviewRepo := &repo.TourReviewRepository{Collection: db.Collection("tour_reviews")}
 	tourReviewService := &service.TourReviewService{TourReviewRepo: tourReviewRepo}
 	tourReviewHandler := &handler.TourReviewHandler{TourReviewService: tourReviewService}
 
 	return tourReviewHandler
 }
 
-func initPublicCheckpoint(database *gorm.DB) *handler.PublicCheckpointHandler {
-	publicCheckpointRepo := &repo.PublicCheckpointRepository{DB: database}
+func initPublicCheckpoint(db *mongo.Database) *handler.PublicCheckpointHandler {
+	publicCheckpointRepo := &repo.PublicCheckpointRepository{Collection: db.Collection("public_checkpoints")}
 	publicCheckpointService := &service.PublicCheckpointService{CheckpointRepo: publicCheckpointRepo}
 	publicCheckpointHandler := &handler.PublicCheckpointHandler{CheckpointService: publicCheckpointService}
 	return publicCheckpointHandler
 }
 
-func initCheckpoint(database *gorm.DB) *handler.CheckpointHandler {
-	checkpointRepo := &repo.CheckpointRepository{DB: database}
-	checkpointService := &service.CheckpointService{CheckpointRepo: checkpointRepo}
+func initCheckpoint(db *mongo.Database, tourRepo *repo.TourRepository) *handler.CheckpointHandler {
+	checkpointRepo := &repo.CheckpointRepository{Collection: db.Collection("checkpoints")}
+	checkpointService := &service.CheckpointService{CheckpointRepo: checkpointRepo, TourRepo: tourRepo}
 	checkpointHandler := &handler.CheckpointHandler{CheckpointService: checkpointService}
 	return checkpointHandler
 }
 
-func initTouristPosition(database *gorm.DB) *handler.TouristPositionHandler {
-	touristPositionRepo := &repo.TouristPositionRepository{DB: database}
+func initTouristPosition(db *mongo.Database) *handler.TouristPositionHandler {
+	touristPositionRepo := &repo.TouristPositionRepository{Collection: db.Collection("tourist_positions")}
 	touristPositionService := &service.TouristPositionService{TouristPositionRepo: touristPositionRepo}
 	touristPositionHandler := &handler.TouristPositionHandler{TouristPositionService: touristPositionService}
 	return touristPositionHandler
 }
 
-func initTourExecution(database *gorm.DB) *handler.TourExecutionHandler {
-	tourExecutionRepo := &repo.TourExecutionRepository{DB: database}
+func initTourExecution(db *mongo.Database) *handler.TourExecutionHandler {
+	tourExecutionRepo := &repo.TourExecutionRepository{Collection: db.Collection("tour_executions")}
 	tourExecutionService := &service.TourExecutionService{TourExecutionRepo: tourExecutionRepo}
 	tourExecutionHandler := &handler.TourExecutionHandler{TourExecutionService: tourExecutionService}
 

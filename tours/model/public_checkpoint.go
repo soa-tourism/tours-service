@@ -2,28 +2,25 @@ package model
 
 import (
 	"errors"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 
-	"github.com/google/uuid"
 	"github.com/lib/pq"
 	"gorm.io/gorm"
 )
 
 type PublicCheckpoint struct {
-	Id          int64          `gorm:"primaryKey"`
-	Longitude   float64        `json:"Longitude"`
-	Latitude    float64        `json:"Latitude"`
-	Name        string         `json:"Name"`
-	Description string         `json:"Description"`
-	Pictures    pq.StringArray `json:"Pictures" gorm:"type:text[]"`
+	ID          primitive.ObjectID `json:"Id" bson:"_id,omitempty"`
+	Longitude   float64            `json:"Longitude"`
+	Latitude    float64            `json:"Latitude"`
+	Name        string             `json:"Name"`
+	Description string             `json:"Description"`
+	Pictures    pq.StringArray     `json:"Pictures" gorm:"type:text[]"`
 }
 
 func (pch *PublicCheckpoint) BeforeCreate(scope *gorm.DB) error {
 	if err := pch.Validate(); err != nil {
 		return err
 	}
-
-	uid := uuid.New()
-	pch.Id = int64(uid.ID())
 
 	return nil
 }

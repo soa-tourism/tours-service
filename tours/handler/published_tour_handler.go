@@ -3,8 +3,8 @@ package handler
 import (
 	"encoding/json"
 	"github.com/gorilla/mux"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"net/http"
-	"strconv"
 	"tours/dto"
 	"tours/service"
 )
@@ -35,7 +35,7 @@ func (handler *PublishedTourHandler) GetAllPublished(writer http.ResponseWriter,
 
 func (handler *PublishedTourHandler) Get(writer http.ResponseWriter, req *http.Request) {
 	idStr := mux.Vars(req)["id"]
-	id, err := strconv.ParseInt(idStr, 10, 64)
+	id, err := primitive.ObjectIDFromHex(idStr)
 
 	tour, err := handler.PublishedTourService.Find(id)
 	writer.Header().Set("Content-Type", "application/json")

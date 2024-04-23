@@ -2,6 +2,7 @@ package service
 
 import (
 	"fmt"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"tours/model"
 	"tours/repo"
 )
@@ -18,7 +19,7 @@ func (service *EquipmentService) FindAllEquipment() ([]model.Equipment, error) {
 	return equipment, nil
 }
 
-func (service *EquipmentService) FindEquipment(id int64) (*model.Equipment, error) {
+func (service *EquipmentService) FindEquipment(id primitive.ObjectID) (*model.Equipment, error) {
 	equipment, err := service.EquipmentRepo.FindById(id)
 	if err != nil {
 		return nil, fmt.Errorf("equipment with ID %d not found", id)
@@ -31,7 +32,7 @@ func (service *EquipmentService) CreateEquipment(equipment *model.Equipment) (*m
 	if err != nil {
 		return nil, fmt.Errorf("failed to create equipment: %v", err)
 	}
-	return &createdEquipment, nil
+	return createdEquipment, nil
 }
 
 func (service *EquipmentService) UpdateEquipment(equipment *model.Equipment) (*model.Equipment, error) {
@@ -39,10 +40,10 @@ func (service *EquipmentService) UpdateEquipment(equipment *model.Equipment) (*m
 	if err != nil {
 		return nil, fmt.Errorf("failed to update equipment: %v", err)
 	}
-	return &updatedEquipment, nil
+	return updatedEquipment, nil
 }
 
-func (service *EquipmentService) DeleteEquipment(id int64) error {
+func (service *EquipmentService) DeleteEquipment(id primitive.ObjectID) error {
 	err := service.EquipmentRepo.Delete(id)
 	if err != nil {
 		return fmt.Errorf("failed to delete equipment with ID %d: %v", id, err)
@@ -50,10 +51,11 @@ func (service *EquipmentService) DeleteEquipment(id int64) error {
 	return nil
 }
 
-func (service *EquipmentService) GetAvailableEquipment(tourId int64, equipmentIds []int64) ([]model.Equipment, error) {
-	availableEquipment, err := service.EquipmentRepo.GetAvailable(equipmentIds)
-	if err != nil {
-		return nil, fmt.Errorf("failed to retrieve equipment: %v", err)
-	}
-	return availableEquipment, nil
-}
+// TODO fix?
+//func (service *EquipmentService) GetAvailableEquipment(tourId primitive.ObjectID, equipmentIds []primitive.ObjectID) ([]model.Equipment, error) {
+//	availableEquipment, err := service.EquipmentRepo.GetAvailable(equipmentIds)
+//	if err != nil {
+//		return nil, fmt.Errorf("failed to retrieve equipment: %v", err)
+//	}
+//	return availableEquipment, nil
+//}

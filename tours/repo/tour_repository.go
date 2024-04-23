@@ -1,98 +1,139 @@
 package repo
 
 import (
-	"tours/model"
+	"context"
+	"errors"
+	"fmt"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 
-	"gorm.io/gorm"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo"
+	"tours/model"
 )
 
 type TourRepository struct {
-	DB *gorm.DB
+	Collection *mongo.Collection
 }
 
 func (repo *TourRepository) FindAll() ([]model.Tour, error) {
+	ctx := context.TODO()
+	cursor, err := repo.Collection.Find(ctx, bson.M{})
+	if err != nil {
+		return nil, err
+	}
+	defer func(cursor *mongo.Cursor, ctx context.Context) {
+		err := cursor.Close(ctx)
+		if err != nil {
+			fmt.Printf("Error closing cursor: %v\n", err)
+		}
+	}(cursor, ctx)
+
 	var tours []model.Tour
-	dbResult := repo.DB.Find(&tours)
-	if dbResult.Error != nil {
-		return nil, dbResult.Error
+	if err := cursor.All(ctx, &tours); err != nil {
+		return nil, err
 	}
 	return tours, nil
 }
 
-func (repo *TourRepository) FindById(id int64) (*model.Tour, error) {
-	tour := model.Tour{}
-	dbResult := repo.DB.Preload("Equipment").Preload("Checkpoints").First(&tour, id)
-	if dbResult.Error != nil {
-		return &tour, dbResult.Error
+func (repo *TourRepository) FindById(id primitive.ObjectID) (*model.Tour, error) {
+	ctx := context.TODO()
+	filter := bson.M{"_id": id}
+	var tour model.Tour
+	err := repo.Collection.FindOne(ctx, filter).Decode(&tour)
+	if err != nil {
+		return nil, err
 	}
 	return &tour, nil
 }
 
-func (repo *TourRepository) Create(tour *model.Tour) (model.Tour, error) {
-	dbResult := repo.DB.Create(tour)
-	if dbResult.Error != nil {
-		return model.Tour{}, dbResult.Error
+func (repo *TourRepository) Create(tour *model.Tour) (*model.Tour, error) {
+	ctx := context.TODO()
+	result, err := repo.Collection.InsertOne(ctx, tour)
+	if err != nil {
+		return nil, err
 	}
-	return *tour, nil
+
+	insertedID, ok := result.InsertedID.(primitive.ObjectID)
+	if !ok {
+		return nil, errors.New("failed to get inserted ID")
+	}
+	tour.ID = insertedID
+
+	return tour, nil
 }
 
-func (repo *TourRepository) Update(tour *model.Tour) (model.Tour, error) {
-	tour.Equipment = nil
-	tour.Checkpoints = nil
-	dbResult := repo.DB.Save(tour)
-	if dbResult.Error != nil {
-		return model.Tour{}, dbResult.Error
+func (repo *TourRepository) Update(tour *model.Tour) (*model.Tour, error) {
+	ctx := context.TODO()
+	filter := bson.M{"_id": tour.ID}
+	update := bson.M{"$set": tour}
+	_, err := repo.Collection.UpdateOne(ctx, filter, update)
+	if err != nil {
+		return nil, err
 	}
-	return *tour, nil
+	return tour, nil
 }
 
-func (repo *TourRepository) Delete(id int64) error {
-	dbResult := repo.DB.Delete(&model.Tour{}, id)
-	if dbResult.Error != nil {
-		return dbResult.Error
-	}
-	return nil
+func (repo *TourRepository) Delete(id primitive.ObjectID) error {
+	ctx := context.TODO()
+	filter := bson.M{"_id": id}
+	_, err := repo.Collection.DeleteOne(ctx, filter)
+	return err
 }
 
-func (repo *TourRepository) FindByAuthor(id int64) ([]model.Tour, error) {
+func (repo *TourRepository) FindByAuthor(authorID int64) ([]model.Tour, error) {
+	ctx := context.TODO()
+	filter := bson.M{"authorid": authorID}
+	cursor, err := repo.Collection.Find(ctx, filter)
+	if err != nil {
+		return nil, err
+	}
+	defer func(cursor *mongo.Cursor, ctx context.Context) {
+		err := cursor.Close(ctx)
+		if err != nil {
+			fmt.Printf("Error closing cursor: %v\n", err)
+		}
+	}(cursor, ctx)
+
 	var tours []model.Tour
-	dbResult := repo.DB.Where("author_id = ?", id).Find(&tours)
-	if dbResult.Error != nil {
-		return nil, dbResult.Error
+	if err := cursor.All(ctx, &tours); err != nil {
+		return nil, err
 	}
 	return tours, nil
 }
 
 func (repo *TourRepository) FindAllPublished() ([]model.Tour, error) {
+	ctx := context.TODO()
+	filter := bson.M{"status": model.Published}
+	cursor, err := repo.Collection.Find(ctx, filter)
+	if err != nil {
+		return nil, err
+	}
+	defer func(cursor *mongo.Cursor, ctx context.Context) {
+		err := cursor.Close(ctx)
+		if err != nil {
+			fmt.Printf("Error closing cursor: %v\n", err)
+		}
+	}(cursor, ctx)
+
 	var tours []model.Tour
-	dbResult := repo.DB.Where("status = ?", model.Published).Find(&tours)
-	if dbResult.Error != nil {
-		return nil, dbResult.Error
+	if err := cursor.All(ctx, &tours); err != nil {
+		return nil, err
 	}
 	return tours, nil
 }
 
-func (repo *TourRepository) AddEquipment(tourId int64, equipmentId int64) error {
-	if err := repo.DB.Create(
-		&model.TourEquipment{
-			TourId:      tourId,
-			EquipmentId: equipmentId,
-		}).Error; err != nil {
-		return err
-	}
-
-	return nil
+func (repo *TourRepository) AddEquipment(tourID primitive.ObjectID, equipmentID primitive.ObjectID) error {
+	ctx := context.TODO()
+	update := bson.M{"$addToSet": bson.M{"equipment": equipmentID}}
+	filter := bson.M{"_id": tourID}
+	_, err := repo.Collection.UpdateOne(ctx, filter, update)
+	return err
 }
 
-func (repo *TourRepository) RemoveEquipment(tourId int64, equipmentId int64) error {
-	if err := repo.DB.Delete(
-		&model.TourEquipment{},
-		"tour_id = ?  AND equipment_id = ?",
-		tourId,
-		equipmentId,
-	).Error; err != nil {
-		return err
-	}
-
-	return nil
+func (repo *TourRepository) RemoveEquipment(tourID primitive.ObjectID, equipmentID primitive.ObjectID) error {
+	ctx := context.TODO()
+	update := bson.M{"$pull": bson.M{"equipment": bson.M{"_id": equipmentID}}}
+	filter := bson.M{"_id": tourID}
+	_, err := repo.Collection.UpdateOne(ctx, filter, update)
+	return err
 }

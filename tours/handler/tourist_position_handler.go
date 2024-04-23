@@ -2,8 +2,8 @@ package handler
 
 import (
 	"encoding/json"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"net/http"
-	"strconv"
 	"tours/dto"
 	"tours/service"
 
@@ -36,7 +36,7 @@ func (handler *TouristPositionHandler) GetAll(writer http.ResponseWriter, req *h
 
 func (handler *TouristPositionHandler) Get(writer http.ResponseWriter, req *http.Request) {
 	idStr := mux.Vars(req)["id"]
-	id, err := strconv.ParseInt(idStr, 10, 64)
+	id, err := primitive.ObjectIDFromHex(idStr)
 	if err != nil {
 		writer.WriteHeader(http.StatusBadRequest)
 		return
@@ -83,7 +83,7 @@ func (handler *TouristPositionHandler) Create(writer http.ResponseWriter, req *h
 func (handler *TouristPositionHandler) Update(writer http.ResponseWriter, req *http.Request) {
 	params := mux.Vars(req)
 	idStr := params["id"]
-	id, err := strconv.ParseInt(idStr, 10, 64)
+	id, err := primitive.ObjectIDFromHex(idStr)
 	if err != nil {
 		writer.WriteHeader(http.StatusBadRequest)
 		return
@@ -97,7 +97,7 @@ func (handler *TouristPositionHandler) Update(writer http.ResponseWriter, req *h
 	}
 
 	TouristPosition := TouristPositionDto.MapToModel()
-	TouristPosition.Id = id
+	TouristPosition.ID = id
 	updatedTouristPosition, err := handler.TouristPositionService.UpdateTouristPosition(TouristPosition)
 	if err != nil {
 		writer.WriteHeader(http.StatusInternalServerError)
@@ -115,7 +115,7 @@ func (handler *TouristPositionHandler) Update(writer http.ResponseWriter, req *h
 
 func (handler *TouristPositionHandler) Delete(writer http.ResponseWriter, req *http.Request) {
 	idStr := mux.Vars(req)["id"]
-	id, err := strconv.ParseInt(idStr, 10, 64)
+	id, err := primitive.ObjectIDFromHex(idStr)
 	if err != nil {
 		writer.WriteHeader(http.StatusBadRequest)
 		return

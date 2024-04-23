@@ -3,6 +3,7 @@ package handler
 import (
 	"encoding/json"
 	"github.com/gorilla/mux"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"net/http"
 	"strconv"
 	"tours/dto"
@@ -51,7 +52,7 @@ func (handler *TourReviewHandler) GetAllByAuthor(writer http.ResponseWriter, req
 
 func (handler *TourReviewHandler) GetAllByTour(writer http.ResponseWriter, req *http.Request) {
 	idStr := mux.Vars(req)["id"]
-	id, err := strconv.ParseInt(idStr, 10, 64)
+	id, err := primitive.ObjectIDFromHex(idStr)
 
 	tourReview, err := handler.TourReviewService.FindAllTourReviewsByTour(id)
 	writer.Header().Set("Content-Type", "application/json")
@@ -69,7 +70,7 @@ func (handler *TourReviewHandler) GetAllByTour(writer http.ResponseWriter, req *
 
 func (handler *TourReviewHandler) Get(writer http.ResponseWriter, req *http.Request) {
 	idStr := mux.Vars(req)["id"]
-	id, err := strconv.ParseInt(idStr, 10, 64)
+	id, err := primitive.ObjectIDFromHex(idStr)
 
 	tourReview, err := handler.TourReviewService.FindTourReview(id)
 	writer.Header().Set("Content-Type", "application/json")
@@ -120,7 +121,7 @@ func (handler *TourReviewHandler) Create(writer http.ResponseWriter, req *http.R
 
 func (handler *TourReviewHandler) GetAverageRating(writer http.ResponseWriter, req *http.Request) {
 	idStr := mux.Vars(req)["id"]
-	id, err := strconv.ParseInt(idStr, 10, 64)
+	id, err := primitive.ObjectIDFromHex(idStr)
 
 	rating, err := handler.TourReviewService.FindAverageRating(id)
 	writer.Header().Set("Content-Type", "application/json")

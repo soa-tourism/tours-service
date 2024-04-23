@@ -1,62 +1,113 @@
 package repo
 
 import (
+	"context"
+	"errors"
+	"fmt"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
 	"tours/model"
-
-	"gorm.io/gorm"
 )
 
 type CheckpointCompletitionRepository struct {
-	DB *gorm.DB
+	Collection *mongo.Collection
 }
 
 func (repo *CheckpointCompletitionRepository) FindAll() ([]model.CheckpointCompletition, error) {
-	var CheckpointCompletitions []model.CheckpointCompletition
-	dbResult := repo.DB.Find(&CheckpointCompletitions)
-	if dbResult.Error != nil {
-		return nil, dbResult.Error
+	ctx := context.TODO()
+	cursor, err := repo.Collection.Find(ctx, bson.M{})
+	if err != nil {
+		return nil, err
 	}
-	return CheckpointCompletitions, nil
+	defer func(cursor *mongo.Cursor, ctx context.Context) {
+		err := cursor.Close(ctx)
+		if err != nil {
+			fmt.Printf("Error closing cursor: %v\n", err)
+		}
+	}(cursor, ctx)
+
+	var completions []model.CheckpointCompletition
+	if err := cursor.All(ctx, &completions); err != nil {
+		return nil, err
+	}
+
+	return completions, nil
 }
 
-func (repo *CheckpointCompletitionRepository) FindById(id int64) (model.CheckpointCompletition, error) {
-	CheckpointCompletition := model.CheckpointCompletition{}
-	dbResult := repo.DB.First(&CheckpointCompletition, "id = ?", id)
-	if dbResult.Error != nil {
-		return CheckpointCompletition, dbResult.Error
+func (repo *CheckpointCompletitionRepository) FindById(id primitive.ObjectID) (*model.CheckpointCompletition, error) {
+	ctx := context.TODO()
+	filter := bson.M{"_id": id}
+
+	var completion model.CheckpointCompletition
+	err := repo.Collection.FindOne(ctx, filter).Decode(&completion)
+	if err != nil {
+		return nil, err
 	}
-	return CheckpointCompletition, nil
+
+	return &completion, nil
 }
 
-func (repo *CheckpointCompletitionRepository) Create(CheckpointCompletition *model.CheckpointCompletition) (model.CheckpointCompletition, error) {
-	dbResult := repo.DB.Create(CheckpointCompletition)
-	if dbResult.Error != nil {
-		return model.CheckpointCompletition{}, dbResult.Error
+func (repo *CheckpointCompletitionRepository) Create(completion *model.CheckpointCompletition) error {
+	ctx := context.TODO()
+	result, err := repo.Collection.InsertOne(ctx, completion)
+	if err != nil {
+		return err
 	}
-	return *CheckpointCompletition, nil
-}
 
-func (repo *CheckpointCompletitionRepository) Update(CheckpointCompletition *model.CheckpointCompletition) (model.CheckpointCompletition, error) {
-	dbResult := repo.DB.Save(CheckpointCompletition)
-	if dbResult.Error != nil {
-		return model.CheckpointCompletition{}, dbResult.Error
+	insertedID, ok := result.InsertedID.(primitive.ObjectID)
+	if !ok {
+		return errors.New("failed to get inserted ID")
 	}
-	return *CheckpointCompletition, nil
-}
+	completion.ID = insertedID
 
-func (repo *CheckpointCompletitionRepository) Delete(id int64) error {
-	dbResult := repo.DB.Delete(&model.CheckpointCompletition{}, id)
-	if dbResult.Error != nil {
-		return dbResult.Error
-	}
 	return nil
 }
 
-func (repo *CheckpointCompletitionRepository) FindByExecution(id int64) ([]model.CheckpointCompletition, error) {
-	var CheckpointCompletitions []model.CheckpointCompletition
-	dbResult := repo.DB.Where("tour_execution_id = ?", id).Find(&CheckpointCompletitions)
-	if dbResult.Error != nil {
-		return nil, dbResult.Error
+func (repo *CheckpointCompletitionRepository) Update(completion *model.CheckpointCompletition) error {
+	ctx := context.TODO()
+	filter := bson.M{"_id": completion.ID}
+	update := bson.M{"$set": completion}
+
+	_, err := repo.Collection.UpdateOne(ctx, filter, update)
+	if err != nil {
+		return err
 	}
-	return CheckpointCompletitions, nil
+
+	return nil
+}
+
+func (repo *CheckpointCompletitionRepository) Delete(id primitive.ObjectID) error {
+	ctx := context.TODO()
+	filter := bson.M{"_id": id}
+
+	_, err := repo.Collection.DeleteOne(ctx, filter)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (repo *CheckpointCompletitionRepository) FindByExecution(id primitive.ObjectID) ([]model.CheckpointCompletition, error) {
+	ctx := context.TODO()
+	filter := bson.M{"tourexecutionid": id}
+
+	cursor, err := repo.Collection.Find(ctx, filter)
+	if err != nil {
+		return nil, err
+	}
+	defer func(cursor *mongo.Cursor, ctx context.Context) {
+		err := cursor.Close(ctx)
+		if err != nil {
+			fmt.Printf("Error closing cursor: %v\n", err)
+		}
+	}(cursor, ctx)
+
+	var completions []model.CheckpointCompletition
+	if err := cursor.All(ctx, &completions); err != nil {
+		return nil, err
+	}
+
+	return completions, nil
 }

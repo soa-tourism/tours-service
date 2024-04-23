@@ -3,6 +3,7 @@ package handler
 import (
 	"encoding/json"
 	"github.com/gorilla/mux"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"net/http"
 	"strconv"
 	"tours/dto"
@@ -35,7 +36,11 @@ func (handler *TourHandler) GetAll(writer http.ResponseWriter, req *http.Request
 
 func (handler *TourHandler) Get(writer http.ResponseWriter, req *http.Request) {
 	idStr := mux.Vars(req)["id"]
-	id, err := strconv.ParseInt(idStr, 10, 64)
+	id, err := primitive.ObjectIDFromHex(idStr)
+	if err != nil {
+		writer.WriteHeader(http.StatusBadRequest)
+		return
+	}
 
 	tour, err := handler.TourService.FindTour(id)
 	writer.Header().Set("Content-Type", "application/json")
@@ -78,7 +83,8 @@ func (handler *TourHandler) Create(writer http.ResponseWriter, req *http.Request
 func (handler *TourHandler) Update(writer http.ResponseWriter, req *http.Request) {
 	params := mux.Vars(req)
 	idStr := params["id"]
-	id, err := strconv.ParseInt(idStr, 10, 64)
+
+	id, err := primitive.ObjectIDFromHex(idStr)
 	if err != nil {
 		writer.WriteHeader(http.StatusBadRequest)
 		return
@@ -92,25 +98,30 @@ func (handler *TourHandler) Update(writer http.ResponseWriter, req *http.Request
 	}
 
 	tour := tourDto.MapToModel()
-	tour.Id = id
+	tour.ID = id
 	updatedTour, err := handler.TourService.UpdateTour(tour)
 	if err != nil {
 		writer.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
+	writer.Header().Set("Content-Type", "application/json")
 	err = json.NewEncoder(writer).Encode(dto.MapFromTour(*updatedTour))
 	if err != nil {
 		writer.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 	writer.WriteHeader(http.StatusOK)
-	writer.Header().Set("Content-Type", "application/json")
 }
 
 func (handler *TourHandler) Delete(writer http.ResponseWriter, req *http.Request) {
 	idStr := mux.Vars(req)["id"]
-	id, err := strconv.ParseInt(idStr, 10, 64)
+
+	id, err := primitive.ObjectIDFromHex(idStr)
+	if err != nil {
+		writer.WriteHeader(http.StatusBadRequest)
+		return
+	}
 
 	err = handler.TourService.DeleteTour(id)
 	if err != nil {
@@ -147,9 +158,14 @@ func (handler *TourHandler) AddEquipment(writer http.ResponseWriter, req *http.R
 	params := mux.Vars(req)
 	idStr := params["id"]
 	equipmentIdStr := params["equipmentId"]
-	id, err := strconv.ParseInt(idStr, 10, 64)
-	equipmentId, err := strconv.ParseInt(equipmentIdStr, 10, 64)
 
+	id, err := primitive.ObjectIDFromHex(idStr)
+	if err != nil {
+		writer.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	equipmentId, err := primitive.ObjectIDFromHex(equipmentIdStr)
 	if err != nil {
 		writer.WriteHeader(http.StatusBadRequest)
 		return
@@ -167,9 +183,14 @@ func (handler *TourHandler) RemoveEquipment(writer http.ResponseWriter, req *htt
 	params := mux.Vars(req)
 	idStr := params["id"]
 	equipmentIdStr := params["equipmentId"]
-	id, err := strconv.ParseInt(idStr, 10, 64)
-	equipmentId, err := strconv.ParseInt(equipmentIdStr, 10, 64)
 
+	id, err := primitive.ObjectIDFromHex(idStr)
+	if err != nil {
+		writer.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	equipmentId, err := primitive.ObjectIDFromHex(equipmentIdStr)
 	if err != nil {
 		writer.WriteHeader(http.StatusBadRequest)
 		return

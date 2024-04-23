@@ -2,6 +2,7 @@ package service
 
 import (
 	"fmt"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"tours/model"
 	"tours/repo"
 )
@@ -18,7 +19,7 @@ func (service *TourExecutionService) FindAllTourExecutions() ([]model.TourExecut
 	return tourExecutions, nil
 }
 
-func (service *TourExecutionService) FindTourExecution(id int64) (*model.TourExecution, error) {
+func (service *TourExecutionService) FindTourExecution(id primitive.ObjectID) (*model.TourExecution, error) {
 	tourExecution, err := service.TourExecutionRepo.FindById(id)
 	if err != nil {
 		return nil, fmt.Errorf("tour execution with ID %d not found", id)
@@ -42,7 +43,7 @@ func (service *TourExecutionService) UpdateTourExecution(tourExecution *model.To
 	return &updatedTourExecution, nil
 }
 
-func (service *TourExecutionService) DeleteTourExecution(id int64) error {
+func (service *TourExecutionService) DeleteTourExecution(id primitive.ObjectID) error {
 	err := service.TourExecutionRepo.Delete(id)
 	if err != nil {
 		return fmt.Errorf("failed to delete tour execution with ID %d: %v", id, err)
@@ -50,7 +51,7 @@ func (service *TourExecutionService) DeleteTourExecution(id int64) error {
 	return nil
 }
 
-func (service *TourExecutionService) FindByTouristAndTour(tourId, touristId int64) ([]model.TourExecution, error) {
+func (service *TourExecutionService) FindByTouristAndTour(tourId primitive.ObjectID, touristId int64) ([]model.TourExecution, error) {
 	executions, err := service.TourExecutionRepo.FindByTouristAndTour(tourId, touristId)
 	if err != nil {
 		return nil, fmt.Errorf("failed to retrieve tour execution: %v", err)
@@ -58,7 +59,7 @@ func (service *TourExecutionService) FindByTouristAndTour(tourId, touristId int6
 	return executions, nil
 }
 
-func (service *TourExecutionService) FindActiveByTouristAndTour(tourId, touristId int64) (model.TourExecution, error) {
+func (service *TourExecutionService) FindActiveByTouristAndTour(tourId primitive.ObjectID, touristId int64) (model.TourExecution, error) {
 	execution, err := service.TourExecutionRepo.FindActiveByTouristAndTour(tourId, touristId)
 	if err != nil {
 		return model.TourExecution{}, fmt.Errorf("failed to retrieve active tour execution: %v", err)
