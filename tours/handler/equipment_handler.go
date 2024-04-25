@@ -100,25 +100,26 @@ func (handler *EquipmentHandler) Delete(writer http.ResponseWriter, req *http.Re
 }
 
 func (handler *EquipmentHandler) GetAvailable(writer http.ResponseWriter, req *http.Request) {
-	//vars := mux.Vars(req)
-	//tourIdStr := vars["id"]
-	//if err != nil {
-	//	writer.WriteHeader(http.StatusBadRequest)
-	//	return
-	//}
-	//
-	//queryValues := req.URL.Query()
-	//equipmentIdsStr := queryValues["equipmentIds"]
-	//var equipmentIds []primitive.ObjectID
-	//for _, idStr := range equipmentIdsStr {
-	//	id, err := primitive.ObjectIDFromHex(idStr)
-	//	if err != nil {
-	//		writer.WriteHeader(http.StatusBadRequest)
-	//		return
-	//	}
-	//	equipmentIds = append(equipmentIds, id)
-	//}
-	equipment, err := handler.EquipmentService.FindAllEquipment()
+	vars := mux.Vars(req)
+	tourIdStr := vars["id"]
+	tourId, err := primitive.ObjectIDFromHex(tourIdStr)
+	if err != nil {
+		writer.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	queryValues := req.URL.Query()
+	equipmentIdsStr := queryValues["equipmentIds"]
+	var equipmentIds []primitive.ObjectID
+	for _, idStr := range equipmentIdsStr {
+		id, err := primitive.ObjectIDFromHex(idStr)
+		if err != nil {
+			writer.WriteHeader(http.StatusBadRequest)
+			return
+		}
+		equipmentIds = append(equipmentIds, id)
+	}
+	equipment, err := handler.EquipmentService.GetAvailableEquipment(tourId, equipmentIds)
 	writer.Header().Set("Content-Type", "application/json")
 	if err != nil {
 		writer.WriteHeader(http.StatusNotFound)

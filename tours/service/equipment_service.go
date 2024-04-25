@@ -51,11 +51,10 @@ func (service *EquipmentService) DeleteEquipment(id primitive.ObjectID) error {
 	return nil
 }
 
-// TODO fix?
-//func (service *EquipmentService) GetAvailableEquipment(tourId primitive.ObjectID, equipmentIds []primitive.ObjectID) ([]model.Equipment, error) {
-//	availableEquipment, err := service.EquipmentRepo.GetAvailable(equipmentIds)
-//	if err != nil {
-//		return nil, fmt.Errorf("failed to retrieve equipment: %v", err)
-//	}
-//	return availableEquipment, nil
-//}
+func (service *EquipmentService) GetAvailableEquipment(tourId primitive.ObjectID, equipmentIds []primitive.ObjectID) ([]model.Equipment, error) {
+	availableEquipment, err := service.EquipmentRepo.GetAvailable(equipmentIds)
+	if err != nil {
+		return nil, fmt.Errorf("failed to retrieve equipment: %v", err)
+	}
+	return availableEquipment, nil
+}

@@ -61,22 +61,22 @@ func (service *TourService) FindToursByAuthor(id int64) ([]model.Tour, error) {
 }
 
 func (service *TourService) AddEquipment(tourId primitive.ObjectID, equipmentId primitive.ObjectID) error {
-	//equipment, err := service.EquipmentRepo.FindById(equipmentId)
-	//if err != nil {
-	//	return err
-	//}
-	//
-	//tour, err := service.TourRepo.FindById(tourId)
-	//if err != nil {
-	//	return err
-	//}
-	//
-	//tour.Equipment = append(tour.Equipment, *equipment)
-	//
-	//if _, err := service.TourRepo.Update(tour); err != nil {
-	//	return err
-	//}
-	//
+	equipment, err := service.EquipmentRepo.FindById(equipmentId)
+	if err != nil {
+		return err
+	}
+
+	tour, err := service.TourRepo.FindById(tourId)
+	if err != nil {
+		return err
+	}
+
+	tour.Equipment = append(tour.Equipment, *equipment)
+
+	if _, err := service.TourRepo.Update(tour); err != nil {
+		return err
+	}
+
 	return nil
 }
 
