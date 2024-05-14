@@ -19,14 +19,24 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	Tour_GetEquipment_FullMethodName = "/Tour/GetEquipment"
+	Tour_GetAvailableEquipment_FullMethodName = "/Tour/GetAvailableEquipment"
+	Tour_GetAllEquipment_FullMethodName       = "/Tour/GetAllEquipment"
+	Tour_GetEquipment_FullMethodName          = "/Tour/GetEquipment"
+	Tour_CreateEquipment_FullMethodName       = "/Tour/CreateEquipment"
+	Tour_UpdateEquipment_FullMethodName       = "/Tour/UpdateEquipment"
+	Tour_DeleteEquipment_FullMethodName       = "/Tour/DeleteEquipment"
 )
 
 // TourClient is the client API for Tour service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type TourClient interface {
+	GetAvailableEquipment(ctx context.Context, in *EquipmentIds, opts ...grpc.CallOption) (*EquipmentsResponse, error)
+	GetAllEquipment(ctx context.Context, in *Page, opts ...grpc.CallOption) (*PagedEquipmentsResponse, error)
 	GetEquipment(ctx context.Context, in *EquipmentId, opts ...grpc.CallOption) (*EquipmentResponse, error)
+	CreateEquipment(ctx context.Context, in *EquipmentResponse, opts ...grpc.CallOption) (*EquipmentResponse, error)
+	UpdateEquipment(ctx context.Context, in *UpdateEquipmentId, opts ...grpc.CallOption) (*EquipmentResponse, error)
+	DeleteEquipment(ctx context.Context, in *EquipmentId, opts ...grpc.CallOption) (*EquipmentResponse, error)
 }
 
 type tourClient struct {
@@ -35,6 +45,24 @@ type tourClient struct {
 
 func NewTourClient(cc grpc.ClientConnInterface) TourClient {
 	return &tourClient{cc}
+}
+
+func (c *tourClient) GetAvailableEquipment(ctx context.Context, in *EquipmentIds, opts ...grpc.CallOption) (*EquipmentsResponse, error) {
+	out := new(EquipmentsResponse)
+	err := c.cc.Invoke(ctx, Tour_GetAvailableEquipment_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *tourClient) GetAllEquipment(ctx context.Context, in *Page, opts ...grpc.CallOption) (*PagedEquipmentsResponse, error) {
+	out := new(PagedEquipmentsResponse)
+	err := c.cc.Invoke(ctx, Tour_GetAllEquipment_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
 }
 
 func (c *tourClient) GetEquipment(ctx context.Context, in *EquipmentId, opts ...grpc.CallOption) (*EquipmentResponse, error) {
@@ -46,11 +74,43 @@ func (c *tourClient) GetEquipment(ctx context.Context, in *EquipmentId, opts ...
 	return out, nil
 }
 
+func (c *tourClient) CreateEquipment(ctx context.Context, in *EquipmentResponse, opts ...grpc.CallOption) (*EquipmentResponse, error) {
+	out := new(EquipmentResponse)
+	err := c.cc.Invoke(ctx, Tour_CreateEquipment_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *tourClient) UpdateEquipment(ctx context.Context, in *UpdateEquipmentId, opts ...grpc.CallOption) (*EquipmentResponse, error) {
+	out := new(EquipmentResponse)
+	err := c.cc.Invoke(ctx, Tour_UpdateEquipment_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *tourClient) DeleteEquipment(ctx context.Context, in *EquipmentId, opts ...grpc.CallOption) (*EquipmentResponse, error) {
+	out := new(EquipmentResponse)
+	err := c.cc.Invoke(ctx, Tour_DeleteEquipment_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // TourServer is the server API for Tour service.
 // All implementations must embed UnimplementedTourServer
 // for forward compatibility
 type TourServer interface {
+	GetAvailableEquipment(context.Context, *EquipmentIds) (*EquipmentsResponse, error)
+	GetAllEquipment(context.Context, *Page) (*PagedEquipmentsResponse, error)
 	GetEquipment(context.Context, *EquipmentId) (*EquipmentResponse, error)
+	CreateEquipment(context.Context, *EquipmentResponse) (*EquipmentResponse, error)
+	UpdateEquipment(context.Context, *UpdateEquipmentId) (*EquipmentResponse, error)
+	DeleteEquipment(context.Context, *EquipmentId) (*EquipmentResponse, error)
 	mustEmbedUnimplementedTourServer()
 }
 
@@ -58,8 +118,23 @@ type TourServer interface {
 type UnimplementedTourServer struct {
 }
 
+func (UnimplementedTourServer) GetAvailableEquipment(context.Context, *EquipmentIds) (*EquipmentsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetAvailableEquipment not implemented")
+}
+func (UnimplementedTourServer) GetAllEquipment(context.Context, *Page) (*PagedEquipmentsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetAllEquipment not implemented")
+}
 func (UnimplementedTourServer) GetEquipment(context.Context, *EquipmentId) (*EquipmentResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetEquipment not implemented")
+}
+func (UnimplementedTourServer) CreateEquipment(context.Context, *EquipmentResponse) (*EquipmentResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateEquipment not implemented")
+}
+func (UnimplementedTourServer) UpdateEquipment(context.Context, *UpdateEquipmentId) (*EquipmentResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateEquipment not implemented")
+}
+func (UnimplementedTourServer) DeleteEquipment(context.Context, *EquipmentId) (*EquipmentResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteEquipment not implemented")
 }
 func (UnimplementedTourServer) mustEmbedUnimplementedTourServer() {}
 
@@ -72,6 +147,42 @@ type UnsafeTourServer interface {
 
 func RegisterTourServer(s grpc.ServiceRegistrar, srv TourServer) {
 	s.RegisterService(&Tour_ServiceDesc, srv)
+}
+
+func _Tour_GetAvailableEquipment_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(EquipmentIds)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(TourServer).GetAvailableEquipment(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Tour_GetAvailableEquipment_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(TourServer).GetAvailableEquipment(ctx, req.(*EquipmentIds))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Tour_GetAllEquipment_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Page)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(TourServer).GetAllEquipment(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Tour_GetAllEquipment_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(TourServer).GetAllEquipment(ctx, req.(*Page))
+	}
+	return interceptor(ctx, in, info, handler)
 }
 
 func _Tour_GetEquipment_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -92,6 +203,60 @@ func _Tour_GetEquipment_Handler(srv interface{}, ctx context.Context, dec func(i
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Tour_CreateEquipment_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(EquipmentResponse)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(TourServer).CreateEquipment(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Tour_CreateEquipment_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(TourServer).CreateEquipment(ctx, req.(*EquipmentResponse))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Tour_UpdateEquipment_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateEquipmentId)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(TourServer).UpdateEquipment(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Tour_UpdateEquipment_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(TourServer).UpdateEquipment(ctx, req.(*UpdateEquipmentId))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Tour_DeleteEquipment_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(EquipmentId)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(TourServer).DeleteEquipment(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Tour_DeleteEquipment_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(TourServer).DeleteEquipment(ctx, req.(*EquipmentId))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Tour_ServiceDesc is the grpc.ServiceDesc for Tour service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -100,8 +265,28 @@ var Tour_ServiceDesc = grpc.ServiceDesc{
 	HandlerType: (*TourServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
+			MethodName: "GetAvailableEquipment",
+			Handler:    _Tour_GetAvailableEquipment_Handler,
+		},
+		{
+			MethodName: "GetAllEquipment",
+			Handler:    _Tour_GetAllEquipment_Handler,
+		},
+		{
 			MethodName: "GetEquipment",
 			Handler:    _Tour_GetEquipment_Handler,
+		},
+		{
+			MethodName: "CreateEquipment",
+			Handler:    _Tour_CreateEquipment_Handler,
+		},
+		{
+			MethodName: "UpdateEquipment",
+			Handler:    _Tour_UpdateEquipment_Handler,
+		},
+		{
+			MethodName: "DeleteEquipment",
+			Handler:    _Tour_DeleteEquipment_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

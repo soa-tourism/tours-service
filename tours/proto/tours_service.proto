@@ -4,7 +4,12 @@ syntax = "proto3";
 option go_package = "proto/tours";
 
 service Tour {
-    rpc GetEquipment (EquipmentId) returns (EquipmentResponse) {}
+	rpc GetAvailableEquipment (EquipmentIds) returns (EquipmentsResponse) {}
+    rpc GetAllEquipment (Page) returns (PagedEquipmentsResponse) {}
+	rpc GetEquipment (EquipmentId) returns (EquipmentResponse) {}
+	rpc CreateEquipment (EquipmentResponse) returns (EquipmentResponse) {}
+	rpc UpdateEquipment (UpdateEquipmentId) returns (EquipmentResponse) {}
+	rpc DeleteEquipment (EquipmentId) returns (EquipmentResponse) {}
 }
 
 message EquipmentIds{
@@ -12,8 +17,8 @@ message EquipmentIds{
 	repeated string equipmentIds = 2;
 }
 message Page{
-	int64 page = 1;
-	int64 pageSize = 2;
+	int32 page = 1;
+	int32 pageSize = 2;
 }
 message EquipmentId{
 	string id = 1;
@@ -29,4 +34,8 @@ message EquipmentResponse{
 }
 message EquipmentsResponse{
 	repeated EquipmentResponse EquipmentResponse = 1;
+}
+message PagedEquipmentsResponse{
+	repeated EquipmentResponse Results = 1;
+	int32 TotalCounts = 2;
 }
