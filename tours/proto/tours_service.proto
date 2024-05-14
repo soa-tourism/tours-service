@@ -1,0 +1,32 @@
+
+syntax = "proto3";
+
+option go_package = "proto/tours";
+
+service Tour {
+    rpc GetEquipment (EquipmentId) returns (EquipmentResponse) {}
+}
+
+message EquipmentIds{
+	string id = 1;
+	repeated string equipmentIds = 2;
+}
+message Page{
+	int64 page = 1;
+	int64 pageSize = 2;
+}
+message EquipmentId{
+	string id = 1;
+}
+message UpdateEquipmentId{
+	EquipmentResponse equipment = 1;
+	string id = 2;
+}
+message EquipmentResponse{
+	optional string id = 1;
+	string name = 2;
+	optional string description = 3;
+}
+message EquipmentsResponse{
+	repeated EquipmentResponse EquipmentResponse = 1;
+}
