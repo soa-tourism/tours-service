@@ -3,15 +3,20 @@ package service
 import (
 	"errors"
 	"fmt"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 	"tours/model"
 	"tours/repo"
+
+	"go.mongodb.org/mongo-driver/bson/primitive"
 
 	"gorm.io/gorm"
 )
 
 type TouristPositionService struct {
 	TouristPositionRepo *repo.TouristPositionRepository
+}
+
+func NewTouristPositionService(r *repo.TouristPositionRepository) *TouristPositionService {
+	return &TouristPositionService{r}
 }
 
 func (service *TouristPositionService) FindAllTouristPositions() ([]model.TouristPosition, error) {

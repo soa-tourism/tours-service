@@ -4,13 +4,6 @@ syntax = "proto3";
 option go_package = "proto/tours";
 
 service Tour {
-	//Checkpoints
-	rpc GetAllCheckpoints(Page) returns (PagedCheckpoints){}
-	rpc GetAllCheckpointsByTour(PageWithId) returns (CheckpointsResponse){}
-	rpc GetCheckpointById(Id) returns (CheckpointResponse){}
-	rpc CreateCheckpoint(CreateCheckpointRequest) returns (CheckpointResponse){}
-	rpc UpdateCheckpoint(UpdateCheckpointRequest) returns (CheckpointResponse){}
-	rpc DeleteCheckpoint(Id) returns (blank){}
 	// Equipment
 	rpc GetAvailableEquipment (EquipmentIds) returns (EquipmentsResponse) {}
     rpc GetAllEquipment (Page) returns (PagedEquipmentsResponse) {}
@@ -32,8 +25,21 @@ service Tour {
 	// PublishedTour
 	// TourReview
 	// PublicCheckpoint
-    // Checkpoint
+    // Checkpoints
+	rpc GetAllCheckpoints(Page) returns (PagedCheckpoints){}
+	rpc GetAllCheckpointsByTour(PageWithId) returns (CheckpointsResponse){}
+	rpc GetCheckpointById(Id) returns (CheckpointResponse){}
+	rpc CreateCheckpoint(CreateCheckpointRequest) returns (CheckpointResponse){}
+	rpc UpdateCheckpoint(UpdateCheckpointRequest) returns (CheckpointResponse){}
+	rpc DeleteCheckpoint(Id) returns (blank){}
+
 	// TouristPosition
+	rpc GetAllTouristPostions(Page) returns (PagedTouristPositionResponse){}
+	rpc GetTouristPostionByCreatorId(TouristPositionByCreator) returns (TouristPositionResponse){}
+	rpc CreateTouristPostion(TouristPositionResponse) returns (TouristPositionResponse){}
+	rpc UpdateTouristPosition(UpdateTouristPositionRequest) returns (TouristPositionResponse){}
+	rpc DeleteTouristPosition(Id) returns (blank){}
+
 	// TourExecution
 }
 message CreateCheckpointRequest{
@@ -146,5 +152,24 @@ message CheckpointsResponse{
 }
 
 // TouristPosition
+message TouristPositionResponse{
+	string id = 1;
+	int64 creatorId = 2;
+	float longitude = 3;
+	float latitude = 4;
+}
+message PagedTouristPositionResponse{
+	repeated TouristPositionResponse results = 1;
+	int32 totalCount = 2;
+}
+message TouristPositionByCreator{
+	int32 page = 1;
+	int32 pageSize = 2;
+	string id = 3;
+}
+message UpdateTouristPositionRequest{
+	TouristPositionResponse position = 1;
+	string id = 2;
+}
 
 // TourExecution
