@@ -10,7 +10,7 @@ service Tour {
 	rpc GetEquipment (Id) returns (EquipmentResponse) {}
 	rpc CreateEquipment (EquipmentResponse) returns (EquipmentResponse) {}
 	rpc UpdateEquipment (UpdateEquipmentId) returns (EquipmentResponse) {}
-	rpc DeleteEquipment (Id) returns (EquipmentResponse) {}
+	rpc DeleteEquipment (Id) returns (blank) {}
 
 	// Tour
 	rpc GetAllTour (Page) returns (PagedToursResponse) {}
@@ -57,7 +57,7 @@ message UpdateEquipmentId{
 }
 message PagedEquipmentsResponse{
 	repeated EquipmentResponse results = 1;
-	int32 totalCounts = 2;
+	int32 totalCount = 2;
 }
 
 // Tour
@@ -78,7 +78,7 @@ message ToursResponse{
 }
 message PagedToursResponse{
 	repeated TourResponse results = 1;
-	int32 totalCounts = 2;
+	int32 totalCount = 2;
 }
 message UpdateTourId{
 	TourResponse tour = 1;

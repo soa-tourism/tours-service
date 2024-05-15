@@ -124,14 +124,102 @@ func convertEquipment(e model.Equipment) *tours.EquipmentResponse {
 	}
 	return response
 }
+func (s Server) GetAvailableEquipment(ctx context.Context, request *tours.EquipmentIds) (*tours.EquipmentsResponse, error) {
+	tourID, err := primitive.ObjectIDFromHex(request.Id)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, "Invalid tour ID format")
+	}
+	var equipmentsIds = []primitive.ObjectID{}
+	for _, id := range request.EquipmentIds {
+		equipId, err := primitive.ObjectIDFromHex(id)
+		if err != nil {
+			return nil, status.Error(codes.InvalidArgument, "Invalid tour ID format")
+		}
+		equipmentsIds = append(equipmentsIds, equipId)
+	}
+	available, err := s.equipmentService.GetAvailableEquipment(tourID, equipmentsIds)
+	if err != nil {
+		return nil, status.Error(codes.NotFound, "Equipment not found")
+	}
 
-// TODO
-// 	rpc GetAvailableEquipment (EquipmentIds) returns (EquipmentsResponse) {}
-//  rpc GetAllEquipment (Page) returns (PagedEquipmentsResponse) {}
-// 	rpc GetEquipment (Id) returns (EquipmentResponse) {}
-// 	rpc CreateEquipment (EquipmentResponse) returns (EquipmentResponse) {}
-// 	rpc UpdateEquipment (UpdateEquipmentId) returns (EquipmentResponse) {}
-// 	rpc DeleteEquipment (Id) returns (EquipmentResponse) {}
+	var responses []*tours.EquipmentResponse
+	for _, equipment := range available {
+		response := convertEquipment(equipment)
+		responses = append(responses, response)
+	}
+
+	equpmentResponse := &tours.EquipmentsResponse{
+		EquipmentResponse: responses,
+	}
+	return equpmentResponse, nil
+}
+func (s Server) GetAllEquipment(ctx context.Context, request *tours.Page) (*tours.PagedEquipmentsResponse, error) {
+	all, err := s.equipmentService.FindAllEquipment()
+	if err != nil {
+		return nil, status.Error(codes.NotFound, "Equipments not found")
+	}
+	var responses []*tours.EquipmentResponse
+	for _, t := range all {
+		var response = convertEquipment(t)
+		responses = append(responses, response)
+	}
+	pagedResponse := &tours.PagedEquipmentsResponse{
+		Results:    responses,
+		TotalCount: int32(len(responses)),
+	}
+	return pagedResponse, nil
+}
+func (s Server) GetEquipment(ctx context.Context, request *tours.Id) (*tours.EquipmentResponse, error) {
+	objectID, err := primitive.ObjectIDFromHex(request.Id)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, "Invalid equipment ID format")
+	}
+
+	found, err := s.equipmentService.FindEquipment(objectID)
+	if err != nil {
+		return nil, status.Error(codes.NotFound, "Equipment not found")
+	}
+	var response = convertEquipment(*found)
+	return response, nil
+}
+func (s Server) CreateEquipment(ctx context.Context, request *tours.EquipmentResponse) (*tours.EquipmentResponse, error) {
+	equipment := &model.Equipment{
+		Name:        request.Name,
+		Description: request.Description,
+	}
+	created, err := s.equipmentService.CreateEquipment(equipment)
+	if err != nil {
+		return nil, status.Error(codes.NotFound, "Equipment not created")
+	}
+	var response = convertEquipment(*created)
+	return response, nil
+}
+func (s Server) UpdateEquipment(ctx context.Context, request *tours.UpdateEquipmentId) (*tours.EquipmentResponse, error) {
+	objectID, err := primitive.ObjectIDFromHex(request.Id)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, "Invalid equipment ID format")
+	}
+	equipment := &model.Equipment{
+		ID:          objectID,
+		Name:        request.Equipment.Name,
+		Description: request.Equipment.Description,
+	}
+	updated, err := s.equipmentService.UpdateEquipment(equipment)
+	if err != nil {
+		return nil, status.Error(codes.NotFound, "Equipment not updated")
+	}
+	var response = convertEquipment(*updated)
+	return response, nil
+}
+func (s Server) DeleteEquipment(ctx context.Context, request *tours.Id) (*tours.Blank, error) {
+	objectID, err := primitive.ObjectIDFromHex(request.Id)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, "Invalid tour ID format")
+	}
+	err = s.equipmentService.DeleteEquipment(objectID)
+	response := &tours.Blank{}
+	return response, err
+}
 
 // Tour
 func convertTour(tour model.Tour) *tours.TourResponse {
@@ -173,8 +261,8 @@ func (s Server) GetAllTour(ctx context.Context, request *tours.Page) (*tours.Pag
 		responses = append(responses, response)
 	}
 	pagedResponse := &tours.PagedToursResponse{
-		Results:     responses,
-		TotalCounts: int32(len(responses)),
+		Results:    responses,
+		TotalCount: int32(len(responses)),
 	}
 	return pagedResponse, nil
 }
@@ -229,7 +317,7 @@ func (s Server) UpdateTour(ctx context.Context, request *tours.UpdateTourId) (*t
 	}
 	updated, err := s.tourService.UpdateTour(tour)
 	if err != nil {
-		return nil, status.Error(codes.NotFound, "Tour not created")
+		return nil, status.Error(codes.NotFound, "Tour not updated")
 	}
 	var response = convertTour(*updated)
 	return response, nil

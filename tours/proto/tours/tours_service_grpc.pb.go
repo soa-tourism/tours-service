@@ -45,7 +45,7 @@ type TourClient interface {
 	GetEquipment(ctx context.Context, in *Id, opts ...grpc.CallOption) (*EquipmentResponse, error)
 	CreateEquipment(ctx context.Context, in *EquipmentResponse, opts ...grpc.CallOption) (*EquipmentResponse, error)
 	UpdateEquipment(ctx context.Context, in *UpdateEquipmentId, opts ...grpc.CallOption) (*EquipmentResponse, error)
-	DeleteEquipment(ctx context.Context, in *Id, opts ...grpc.CallOption) (*EquipmentResponse, error)
+	DeleteEquipment(ctx context.Context, in *Id, opts ...grpc.CallOption) (*Blank, error)
 	// Tour
 	GetAllTour(ctx context.Context, in *Page, opts ...grpc.CallOption) (*PagedToursResponse, error)
 	GetTour(ctx context.Context, in *Id, opts ...grpc.CallOption) (*TourResponse, error)
@@ -110,8 +110,8 @@ func (c *tourClient) UpdateEquipment(ctx context.Context, in *UpdateEquipmentId,
 	return out, nil
 }
 
-func (c *tourClient) DeleteEquipment(ctx context.Context, in *Id, opts ...grpc.CallOption) (*EquipmentResponse, error) {
-	out := new(EquipmentResponse)
+func (c *tourClient) DeleteEquipment(ctx context.Context, in *Id, opts ...grpc.CallOption) (*Blank, error) {
+	out := new(Blank)
 	err := c.cc.Invoke(ctx, Tour_DeleteEquipment_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -201,7 +201,7 @@ type TourServer interface {
 	GetEquipment(context.Context, *Id) (*EquipmentResponse, error)
 	CreateEquipment(context.Context, *EquipmentResponse) (*EquipmentResponse, error)
 	UpdateEquipment(context.Context, *UpdateEquipmentId) (*EquipmentResponse, error)
-	DeleteEquipment(context.Context, *Id) (*EquipmentResponse, error)
+	DeleteEquipment(context.Context, *Id) (*Blank, error)
 	// Tour
 	GetAllTour(context.Context, *Page) (*PagedToursResponse, error)
 	GetTour(context.Context, *Id) (*TourResponse, error)
@@ -233,7 +233,7 @@ func (UnimplementedTourServer) CreateEquipment(context.Context, *EquipmentRespon
 func (UnimplementedTourServer) UpdateEquipment(context.Context, *UpdateEquipmentId) (*EquipmentResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateEquipment not implemented")
 }
-func (UnimplementedTourServer) DeleteEquipment(context.Context, *Id) (*EquipmentResponse, error) {
+func (UnimplementedTourServer) DeleteEquipment(context.Context, *Id) (*Blank, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteEquipment not implemented")
 }
 func (UnimplementedTourServer) GetAllTour(context.Context, *Page) (*PagedToursResponse, error) {
