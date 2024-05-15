@@ -4,14 +4,18 @@ import (
 	"context"
 	"log"
 	"net"
+	"tours/model"
 	"tours/proto/tours"
 	"tours/repo"
 	"tours/service"
 
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/reflection"
+	"google.golang.org/grpc/status"
 )
 
 func initDB() *mongo.Database {
@@ -65,11 +69,17 @@ type Server struct {
 	equipmentRepo    *repo.EquipmentRepository
 	tourService      *service.TourService
 	tourRepo         *repo.TourRepository
+	//publishedTourService *service.TourService
 	//publishedTourRepo *repo.TourRepository
+	//tourReviewService *service.TourReviewService
 	//tourReviewRepo *repo.TourReviewRepository
+	//publicCheckpointService *service.PublicCheckpointService
 	//publicCheckpointRepo *repo.PublicCheckpointRepository
+	//checkpointService *service.CheckpointService
 	//checkpointRepo *repo.CheckpointRepository
+	// touristPositionService *service.TouristPositionService
 	//touristPositionRepo *repo.TouristPositionRepository
+	//tourExecutionService *service.TourExecutionService
 	//tourExecutionRepo *repo.TourExecutionRepository
 }
 
@@ -104,6 +114,204 @@ func main() {
 	reflection.Register(grpcServer)
 	grpcServer.Serve(lis)
 }
+
+// Equipment
+func convertEquipment(e model.Equipment) *tours.EquipmentResponse {
+	response := &tours.EquipmentResponse{
+		Id:          e.ID.Hex(),
+		Name:        e.Name,
+		Description: e.Description,
+	}
+	return response
+}
+
+// TODO
+// 	rpc GetAvailableEquipment (EquipmentIds) returns (EquipmentsResponse) {}
+//  rpc GetAllEquipment (Page) returns (PagedEquipmentsResponse) {}
+// 	rpc GetEquipment (Id) returns (EquipmentResponse) {}
+// 	rpc CreateEquipment (EquipmentResponse) returns (EquipmentResponse) {}
+// 	rpc UpdateEquipment (UpdateEquipmentId) returns (EquipmentResponse) {}
+// 	rpc DeleteEquipment (Id) returns (EquipmentResponse) {}
+
+// Tour
+func convertTour(tour model.Tour) *tours.TourResponse {
+	// equipments
+	var equipments []*tours.EquipmentResponse
+	for _, e := range tour.Equipment {
+		var equipment = convertEquipment(e)
+		equipments = append(equipments, equipment)
+	}
+	//checkpoints
+	var checkpoints []*tours.CheckpointResponse
+	for _, ch := range tour.Checkpoints {
+		var checkpoint = convertCheckpoint(ch)
+		checkpoints = append(checkpoints, checkpoint)
+	}
+
+	response := &tours.TourResponse{
+		Id:          tour.ID.Hex(),
+		AuthorId:    tour.AuthorID,
+		Name:        tour.Name,
+		Description: tour.Description,
+		Difficulty:  tour.Difficulty.String(),
+		Status:      tour.Status.String(),
+		Price:       tour.Price,
+		Tags:        tour.Tags,
+		Equipment:   equipments,
+		Checkpoints: checkpoints,
+	}
+	return response
+}
+func (s Server) GetAllTour(ctx context.Context, request *tours.Page) (*tours.PagedToursResponse, error) {
+	all, err := s.tourService.FindAllTours()
+	if err != nil {
+		return nil, status.Error(codes.NotFound, "Tours not found")
+	}
+	var responses []*tours.TourResponse
+	for _, t := range all {
+		var response = convertTour(t)
+		responses = append(responses, response)
+	}
+	pagedResponse := &tours.PagedToursResponse{
+		Results:     responses,
+		TotalCounts: int32(len(responses)),
+	}
+	return pagedResponse, nil
+}
+func (s Server) GetTour(ctx context.Context, request *tours.Id) (*tours.TourResponse, error) {
+	objectID, err := primitive.ObjectIDFromHex(request.Id)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, "Invalid tour ID format")
+	}
+
+	found, err := s.tourService.FindTour(objectID)
+	if err != nil {
+		return nil, status.Error(codes.NotFound, "Tour not found")
+	}
+	var response = convertTour(*found)
+	return response, nil
+}
+func (s Server) CreateTour(ctx context.Context, request *tours.TourResponse) (*tours.TourResponse, error) {
+	tour := &model.Tour{
+		AuthorID:    request.AuthorId,
+		Name:        request.Name,
+		Description: request.Description,
+		Difficulty:  model.ParseDifficulty(request.Difficulty),
+		Status:      model.ParseStatus(request.Status),
+		Price:       request.Price,
+		Tags:        request.Tags,
+		Equipment:   []model.Equipment{},
+		Checkpoints: []model.Checkpoint{},
+	}
+	created, err := s.tourService.CreateTour(tour)
+	if err != nil {
+		return nil, status.Error(codes.NotFound, "Tour not created")
+	}
+	var response = convertTour(*created)
+	return response, nil
+}
+func (s Server) UpdateTour(ctx context.Context, request *tours.UpdateTourId) (*tours.TourResponse, error) {
+	objectID, err := primitive.ObjectIDFromHex(request.Id)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, "Invalid tour ID format")
+	}
+	tour := &model.Tour{
+		ID:          objectID,
+		AuthorID:    request.Tour.AuthorId,
+		Name:        request.Tour.Name,
+		Description: request.Tour.Description,
+		Difficulty:  model.ParseDifficulty(request.Tour.Difficulty),
+		Status:      model.ParseStatus(request.Tour.Status),
+		Price:       request.Tour.Price,
+		Tags:        request.Tour.Tags,
+		Equipment:   []model.Equipment{},
+		Checkpoints: []model.Checkpoint{},
+	}
+	updated, err := s.tourService.UpdateTour(tour)
+	if err != nil {
+		return nil, status.Error(codes.NotFound, "Tour not created")
+	}
+	var response = convertTour(*updated)
+	return response, nil
+}
+func (s Server) DeleteTour(ctx context.Context, request *tours.Id) (*tours.Blank, error) {
+	objectID, err := primitive.ObjectIDFromHex(request.Id)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, "Invalid tour ID format")
+	}
+	s.tourService.DeleteTour(objectID)
+	response := &tours.Blank{}
+	return response, nil
+}
+func (s Server) GetTourByAuthorId(ctx context.Context, request *tours.TourByAuthorId) (*tours.ToursResponse, error) {
+	found, err := s.tourService.FindToursByAuthor(request.Id)
+	if err != nil {
+		return nil, status.Error(codes.NotFound, "Tour not found")
+	}
+	var responses []*tours.TourResponse
+	for _, t := range found {
+		response := convertTour(t)
+		responses = append(responses, response)
+	}
+
+	toursResponse := &tours.ToursResponse{
+		Tours: responses,
+	}
+	return toursResponse, nil
+}
+func (s Server) AddTourEquipment(ctx context.Context, request *tours.TourEquipment) (*tours.Blank, error) {
+	tourID, err := primitive.ObjectIDFromHex(request.Id)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, "Invalid tour ID format")
+	}
+	equipmentID, err := primitive.ObjectIDFromHex(request.EquipmentId)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, "Invalid tour ID format")
+	}
+
+	s.tourService.AddEquipment(tourID, equipmentID)
+	response := &tours.Blank{}
+	return response, nil
+}
+func (s Server) DeleteTourEquipment(ctx context.Context, request *tours.TourEquipment) (*tours.Blank, error) {
+	tourID, err := primitive.ObjectIDFromHex(request.Id)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, "Invalid tour ID format")
+	}
+	equipmentID, err := primitive.ObjectIDFromHex(request.EquipmentId)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, "Invalid tour ID format")
+	}
+
+	s.tourService.RemoveEquipment(tourID, equipmentID)
+	response := &tours.Blank{}
+	return response, nil
+}
+
+// PublishedTour
+// TourReview
+// PublicCheckpoint
+// Checkpoint
+func convertCheckpoint(ch model.Checkpoint) *tours.CheckpointResponse {
+	response := &tours.CheckpointResponse{
+		Id:                    ch.ID.Hex(),
+		TourId:                ch.TourID.Hex(),
+		AuthorId:              ch.AuthorID,
+		Longitude:             ch.Longitude,
+		Latitude:              ch.Latitude,
+		Name:                  ch.Name,
+		Description:           ch.Description,
+		Pictures:              ch.Pictures,
+		RequiredTimeInSeconds: ch.RequiredTimeInSeconds,
+		IsSecretPrerequisite:  ch.IsSecretPrerequisite,
+		EncounterId:           ch.EncounterID,
+		//checkpointSecret: e.CheckpointSecret,
+	}
+	return response
+}
+
+// TouristPosition
+// TourExecution
 
 // func startServer(database *mongo.Database) {
 // 	equipmentHandler, equipmentRepo := initEquipment(database)
