@@ -4,6 +4,13 @@ syntax = "proto3";
 option go_package = "proto/tours";
 
 service Tour {
+	//Checkpoints
+	rpc GetAllCheckpoints(Page) returns (PagedCheckpoints){}
+	rpc GetAllCheckpointsByTour(PageWithId) returns (CheckpointsResponse){}
+	rpc GetCheckpointById(Id) returns (CheckpointResponse){}
+	rpc CreateCheckpoint(CreateCheckpointRequest) returns (CheckpointResponse){}
+	rpc UpdateCheckpoint(UpdateCheckpointRequest) returns (CheckpointResponse){}
+	rpc DeleteCheckpoint(Id) returns (blank){}
 	// Equipment
 	rpc GetAvailableEquipment (EquipmentIds) returns (EquipmentsResponse) {}
     rpc GetAllEquipment (Page) returns (PagedEquipmentsResponse) {}
@@ -29,10 +36,29 @@ service Tour {
 	// TouristPosition
 	// TourExecution
 }
+message CreateCheckpointRequest{
+	CheckpointResponse checkpoint = 1;
+	string status = 2;
+	repeated bytes pictures = 3;
+}
+message UpdateCheckpointRequest{
+	CheckpointResponse checkpoint = 1;
+	string id = 2;
+	repeated bytes pictures = 3;
+}
+message PagedCheckpoints{
+	repeated CheckpointResponse results= 1;
+	int32 totalCount = 2;
+}
 message blank{}
 message Page{
 	int32 page = 1;
 	int32 pageSize = 2;
+}
+message PageWithId{
+	int32 page = 1;
+	int32 pageSize = 2;
+	string id = 3;
 }
 message Id{
 	string id = 1;
@@ -102,7 +128,7 @@ message TourEquipment{
 
 // Checkpoint
 message CheckpointResponse{
- 	string id = 1;
+	string id = 1;
 	string tourId = 2;
 	int64 authorId = 3;
 	double longitude = 4;
@@ -114,6 +140,9 @@ message CheckpointResponse{
 	//TODO checkpointSecret 
 	int64 encounterId = 10;
 	bool isSecretPrerequisite = 11;
+}
+message CheckpointsResponse{
+	repeated CheckpointResponse checkpoints = 1;
 }
 
 // TouristPosition

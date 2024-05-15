@@ -75,8 +75,8 @@ type Server struct {
 	//tourReviewRepo *repo.TourReviewRepository
 	//publicCheckpointService *service.PublicCheckpointService
 	//publicCheckpointRepo *repo.PublicCheckpointRepository
-	//checkpointService *service.CheckpointService
-	//checkpointRepo *repo.CheckpointRepository
+	checkpointService *service.CheckpointService
+	checkpointRepo    *repo.CheckpointRepository
 	// touristPositionService *service.TouristPositionService
 	//touristPositionRepo *repo.TouristPositionRepository
 	//tourExecutionService *service.TourExecutionService
@@ -100,7 +100,7 @@ func main() {
 	//publishedTourRepo := &repo.TourRepository{Collection: database.Collection("published_tours")}
 	//tourReviewRepo := &repo.TourReviewRepository{Collection: database.Collection("tour_reviews")}
 	//publicCheckpointRepo := &repo.PublicCheckpointRepository{Collection: database.Collection("public_checkpoints")}
-	//checkpointRepo := &repo.CheckpointRepository{Collection: database.Collection("checkpoints")}
+	checkpointRepo := &repo.CheckpointRepository{Collection: database.Collection("checkpoints")}
 	//touristPositionRepo := &repo.TouristPositionRepository{Collection: database.Collection("tourist_positions")}
 	//tourExecutionRepo := &repo.TourExecutionRepository{Collection: database.Collection("tour_executions")}
 
@@ -110,9 +110,97 @@ func main() {
 	tours.RegisterTourServer(grpcServer, Server{
 		equipmentService: service.NewEquipmentService(equipmentRepo), equipmentRepo: equipmentRepo,
 		tourService: service.NewTourService(tourRepo, equipmentRepo), tourRepo: tourRepo,
+		checkpointService: &service.CheckpointService{
+			CheckpointRepo: checkpointRepo,
+			TourRepo:       tourRepo,
+		}, checkpointRepo: checkpointRepo,
 	})
 	reflection.Register(grpcServer)
 	grpcServer.Serve(lis)
+}
+
+func (s Server) GetAllCheckpoints(ctx context.Context, request *tours.Page) (*tours.PagedCheckpoints, error) {
+	all, err := s.checkpointService.FindAllCheckpoints()
+	if err != nil {
+		return nil, status.Error(codes.NotFound, "Checkpoint not found")
+	}
+	var responses []*tours.CheckpointResponse
+	for _, t := range all {
+		var response = convertCheckpoint(t)
+		responses = append(responses, response)
+	}
+	pagedResponse := &tours.PagedCheckpoints{
+		Results:    responses,
+		TotalCount: int32(len(responses)),
+	}
+	return pagedResponse, nil
+}
+
+func (s Server) GetAllCheckpointsByTour(ctx context.Context, request *tours.PageWithId) (*tours.CheckpointsResponse, error) {
+	objectID, err := primitive.ObjectIDFromHex(request.Id)
+	if err != nil {
+		return nil, status.Error(codes.NotFound, "bad objectID")
+	}
+	all, err := s.checkpointService.FindCheckpointsByTour(objectID)
+	if err != nil {
+		return nil, status.Error(codes.NotFound, "Checkpoint not found")
+	}
+	var responses []*tours.CheckpointResponse
+	for _, t := range all {
+		var response = convertCheckpoint(t)
+		responses = append(responses, response)
+	}
+	pagedResponse := &tours.CheckpointsResponse{
+		Checkpoints: responses,
+	}
+	return pagedResponse, nil
+}
+
+func (s Server) GetCheckpointById(ctx context.Context, request *tours.Id) (*tours.CheckpointResponse, error) {
+	objectID, err := primitive.ObjectIDFromHex(request.Id)
+	if err != nil {
+		return nil, status.Error(codes.NotFound, "bad objectID")
+	}
+	all, err2 := s.checkpointService.FindCheckpoint(objectID)
+	if err2 != nil {
+		return nil, status.Error(codes.NotFound, "Checkpoint not found")
+	}
+	return convertCheckpoint(*all), nil
+}
+
+func (s Server) CreateCheckpoint(ctx context.Context, request *tours.CreateCheckpointRequest) (*tours.CheckpointResponse, error) {
+	checkpoint := convertCheckpointResponse(*request.Checkpoint)
+	all, err := s.checkpointService.CreateCheckpoint(checkpoint)
+	if err != nil {
+		return nil, status.Error(codes.NotFound, "Checkpoint not found")
+	}
+	return convertCheckpoint(*all), nil
+}
+func (s Server) UpdateCheckpoint(ctx context.Context, request *tours.UpdateCheckpointRequest) (*tours.CheckpointResponse, error) {
+	checkpoint := convertCheckpointResponse(*request.Checkpoint)
+	objectID, err := primitive.ObjectIDFromHex(request.Id)
+	if err != nil {
+		return nil, status.Error(codes.NotFound, "bad objectID")
+	}
+	checkpoint.ID = objectID
+	all, err2 := s.checkpointService.UpdateCheckpoint(checkpoint)
+	if err2 != nil {
+		return nil, status.Error(codes.NotFound, "Equipments not found")
+	}
+	return convertCheckpoint(*all), nil
+}
+
+// ! 	rpc DeleteCheckpoint(Id) returns (blank){}
+func (s Server) DeleteCheckpoint(ctx context.Context, request *tours.Id) (*tours.Blank, error) {
+	objectID, err := primitive.ObjectIDFromHex(request.Id)
+	if err != nil {
+		return nil, status.Error(codes.NotFound, "bad objectID")
+	}
+	err2 := s.checkpointService.DeleteCheckpoint(objectID)
+	if err2 != nil {
+		return nil, status.Error(codes.NotFound, "Checkpoint not found")
+	}
+	return &tours.Blank{}, nil
 }
 
 // Equipment
@@ -393,6 +481,31 @@ func convertCheckpoint(ch model.Checkpoint) *tours.CheckpointResponse {
 		RequiredTimeInSeconds: ch.RequiredTimeInSeconds,
 		IsSecretPrerequisite:  ch.IsSecretPrerequisite,
 		EncounterId:           ch.EncounterID,
+		//checkpointSecret: e.CheckpointSecret,
+	}
+	return response
+}
+func convertCheckpointResponse(ch tours.CheckpointResponse) *model.Checkpoint {
+	objectID, err := primitive.ObjectIDFromHex(ch.Id)
+	if err != nil {
+		return nil
+	}
+	objectID2, err2 := primitive.ObjectIDFromHex(ch.TourId)
+	if err2 != nil {
+		return nil
+	}
+	response := &model.Checkpoint{
+		ID:                    objectID,
+		TourID:                objectID2,
+		AuthorID:              ch.AuthorId,
+		Longitude:             ch.Longitude,
+		Latitude:              ch.Latitude,
+		Name:                  ch.Name,
+		Description:           ch.Description,
+		Pictures:              ch.Pictures,
+		RequiredTimeInSeconds: ch.RequiredTimeInSeconds,
+		IsSecretPrerequisite:  ch.IsSecretPrerequisite,
+		EncounterID:           ch.EncounterId,
 		//checkpointSecret: e.CheckpointSecret,
 	}
 	return response
