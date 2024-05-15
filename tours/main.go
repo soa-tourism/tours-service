@@ -155,7 +155,7 @@ func (s Server) GetAvailableEquipment(ctx context.Context, request *tours.Equipm
 	}
 
 	equpmentResponse := &tours.EquipmentsResponse{
-		EquipmentResponse: responses,
+		Results: responses,
 	}
 	return equpmentResponse, nil
 }
@@ -349,7 +349,7 @@ func (s Server) GetTourByAuthorId(ctx context.Context, request *tours.TourByAuth
 	}
 
 	toursResponse := &tours.ToursResponse{
-		Tours: responses,
+		Results: responses,
 	}
 	return toursResponse, nil
 }
