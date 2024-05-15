@@ -475,7 +475,23 @@ func (s Server) GetCheckpointById(ctx context.Context, request *tours.Id) (*tour
 	return convertCheckpoint(*all), nil
 }
 func (s Server) CreateCheckpoint(ctx context.Context, request *tours.CreateCheckpointRequest) (*tours.CheckpointResponse, error) {
-	checkpoint := convertCheckpointResponse(*request.Checkpoint)
+	objectID2, err2 := primitive.ObjectIDFromHex(request.Checkpoint.TourId)
+	if err2 != nil {
+		return nil, err2
+	}
+	checkpoint := &model.Checkpoint{
+		TourID:                objectID2,
+		AuthorID:              request.Checkpoint.AuthorId,
+		Longitude:             request.Checkpoint.Longitude,
+		Latitude:              request.Checkpoint.Latitude,
+		Name:                  request.Checkpoint.Name,
+		Description:           request.Checkpoint.Description,
+		Pictures:              request.Checkpoint.Pictures,
+		RequiredTimeInSeconds: request.Checkpoint.RequiredTimeInSeconds,
+		IsSecretPrerequisite:  request.Checkpoint.IsSecretPrerequisite,
+		EncounterID:           request.Checkpoint.EncounterId,
+		//checkpointSecret: e.CheckpointSecret,
+	}
 	all, err := s.checkpointService.CreateCheckpoint(checkpoint)
 	if err != nil {
 		return nil, status.Error(codes.NotFound, "Checkpoint not found")
