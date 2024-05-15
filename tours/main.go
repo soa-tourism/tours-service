@@ -63,7 +63,8 @@ type Server struct {
 	tours.UnimplementedTourServer
 	equipmentService *service.EquipmentService
 	equipmentRepo    *repo.EquipmentRepository
-	//tourRepo *repo.TourRepository
+	tourService      *service.TourService
+	tourRepo         *repo.TourRepository
 	//publishedTourRepo *repo.TourRepository
 	//tourReviewRepo *repo.TourReviewRepository
 	//publicCheckpointRepo *repo.PublicCheckpointRepository
@@ -85,7 +86,7 @@ func main() {
 	}
 
 	equipmentRepo := &repo.EquipmentRepository{Collection: database.Collection("equipment")}
-	//tourRepo := &repo.TourRepository{Collection: database.Collection("tours")}
+	tourRepo := &repo.TourRepository{Collection: database.Collection("tours")}
 	//publishedTourRepo := &repo.TourRepository{Collection: database.Collection("published_tours")}
 	//tourReviewRepo := &repo.TourReviewRepository{Collection: database.Collection("tour_reviews")}
 	//publicCheckpointRepo := &repo.PublicCheckpointRepository{Collection: database.Collection("public_checkpoints")}
@@ -97,7 +98,9 @@ func main() {
 	grpcServer := grpc.NewServer(opts...)
 
 	tours.RegisterTourServer(grpcServer, Server{
-		equipmentService: service.NewEquipmentService(equipmentRepo), equipmentRepo: equipmentRepo})
+		equipmentService: service.NewEquipmentService(equipmentRepo), equipmentRepo: equipmentRepo,
+		tourService: service.NewTourService(tourRepo, equipmentRepo), tourRepo: tourRepo,
+	})
 	reflection.Register(grpcServer)
 	grpcServer.Serve(lis)
 }

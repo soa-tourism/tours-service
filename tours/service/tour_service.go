@@ -2,14 +2,19 @@ package service
 
 import (
 	"fmt"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 	"tours/model"
 	"tours/repo"
+
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type TourService struct {
 	TourRepo      *repo.TourRepository
 	EquipmentRepo *repo.EquipmentRepository
+}
+
+func NewTourService(rt *repo.TourRepository, re *repo.EquipmentRepository) *TourService {
+	return &TourService{rt, re}
 }
 
 func (service *TourService) FindAllTours() ([]model.Tour, error) {
