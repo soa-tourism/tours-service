@@ -2,12 +2,16 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net"
 	"strconv"
+	events "tours/event_handlers"
 	"tours/model"
 	"tours/proto/tours"
 	"tours/repo"
+	saga "tours/saga/messaging"
+	"tours/saga/messaging/nats"
 	"tours/service"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -85,6 +89,7 @@ type Server struct {
 }
 
 func main() {
+	fmt.Println("E")
 	database := initDB()
 	if database == nil {
 		print("FAILED TO CONNECT TO DB")
@@ -117,6 +122,12 @@ func main() {
 		}, checkpointRepo: checkpointRepo,
 		touristPositionService: service.NewTouristPositionService(touristPositionRepo), touristPositionRepo: touristPositionRepo,
 	})
+	commandSubscriber := initSubscriber()
+	replyPublisher := initPublisher()
+	initUpdateCheckpointHandler(&service.CheckpointService{
+		CheckpointRepo: checkpointRepo,
+		TourRepo:       tourRepo,
+	}, replyPublisher, commandSubscriber)
 	reflection.Register(grpcServer)
 	grpcServer.Serve(lis)
 }
@@ -605,45 +616,29 @@ func (s Server) DeleteTouristPosition(ctx context.Context, request *tours.Id) (*
 	return &tours.Blank{}, nil
 }
 
-// TourExecution
+func initPublisher() saga.Publisher {
+	publisher, err := nats.NewNATSPublisher(
+		"nats", "4222",
+		"ruser", "T0pS3cr3t", "encounter.create.reply")
+	if err != nil {
+		log.Fatal(err)
+	}
+	return publisher
+}
 
-// func initPublishedTourHandler(publishedTourHandler *handler.PublishedTourHandler, router *mux.Router) {
-// 	v1 := router.PathPrefix("/v1/tours/published").Subrouter()
-// 	v1.HandleFunc("/{id}", publishedTourHandler.Get).Methods("GET")
-// 	v1.HandleFunc("", publishedTourHandler.GetAllPublished).Methods("GET")
-// }
+func initSubscriber() saga.Subscriber {
+	subscriber, err := nats.NewNATSSubscriber(
+		"nats", "4222",
+		"ruser", "T0pS3cr3t", "encounter.create.command", "encounters_service")
+	if err != nil {
+		log.Fatal(err)
+	}
+	return subscriber
+}
 
-// func initTourReviewHandler(tourReviewHandler *handler.TourReviewHandler, router *mux.Router) {
-// 	v1 := router.PathPrefix("/v1/tours/reviews").Subrouter()
-// 	v1.HandleFunc("/tourist/{id}", tourReviewHandler.GetAllByTourist).Methods("GET")
-// 	v1.HandleFunc("/author/{id}", tourReviewHandler.GetAllByAuthor).Methods("GET")
-// 	v1.HandleFunc("/tour/{id}", tourReviewHandler.GetAllByTour).Methods("GET")
-// 	v1.HandleFunc("/average/{id}", tourReviewHandler.GetAverageRating).Methods("GET")
-// 	v1.HandleFunc("/{id}", tourReviewHandler.Get).Methods("GET")
-// 	v1.HandleFunc("", tourReviewHandler.Create).Methods("POST")
-// }
-
-// func initImageHandler(imageHandler *handler.ImageHandler, router *mux.Router) {
-// 	v1 := router.PathPrefix("/v1/images").Subrouter()
-// 	v1.HandleFunc("/{image}", imageHandler.ServeImage).Methods("GET")
-// }
-
-// func initPublicCheckpointHandler(publicCheckpointHandler *handler.PublicCheckpointHandler, router *mux.Router) {
-// 	v1 := router.PathPrefix("/v1/publicCheckpoint").Subrouter()
-// 	v1.HandleFunc("", publicCheckpointHandler.GetAll).Methods("GET")
-// 	v1.HandleFunc("/details/{id}", publicCheckpointHandler.Get).Methods("GET")
-// 	v1.HandleFunc("", publicCheckpointHandler.Create).Methods("POST")
-// 	v1.HandleFunc("/{id}", publicCheckpointHandler.Update).Methods("PUT")
-// 	v1.HandleFunc("/{id}", publicCheckpointHandler.Delete).Methods("DELETE")
-// }
-
-// func initTourExecutionHandler(tourExecutionHandler *handler.TourExecutionHandler, router *mux.Router) {
-// 	v1 := router.PathPrefix("/v1/execution").Subrouter()
-// 	v1.HandleFunc("", tourExecutionHandler.GetAll).Methods("GET")
-// 	v1.HandleFunc("/{id}", tourExecutionHandler.Get).Methods("GET")
-// 	v1.HandleFunc("", tourExecutionHandler.Create).Methods("POST")
-// 	v1.HandleFunc("/{id}", tourExecutionHandler.Update).Methods("PUT")
-// 	v1.HandleFunc("/{id}", tourExecutionHandler.Delete).Methods("DELETE")
-// 	v1.HandleFunc("/all/{tourId}/{touristId}", tourExecutionHandler.GetByTouristAndTour).Methods("GET")
-// 	v1.HandleFunc("/{tourId}/{touristId}", tourExecutionHandler.GetActiveByTouristAndTour).Methods("GET")
-// }
+func initUpdateCheckpointHandler(service *service.CheckpointService, publisher saga.Publisher, subscriber saga.Subscriber) {
+	_, err := events.NewUpdateCheckpointCommandHandler(service, publisher, subscriber)
+	if err != nil {
+		log.Fatal(err)
+	}
+}
